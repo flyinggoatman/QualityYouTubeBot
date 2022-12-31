@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 import sys
 
-TOKEN = "OTM4MjEyMDIxOTkwNzM1OTAy.GB4vAh.iMaw8k1s28gIBVE6Ajh60E8wDFYSWEGmXymRv4"
+TOKEN = "token goes here"
 
 
 _intents = discord.Intents.none()
