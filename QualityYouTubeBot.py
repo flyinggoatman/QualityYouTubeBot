@@ -290,4 +290,7 @@ Link was posted insice channel """+message.channel.name)
 bot.run(token)
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> a7f3ab24cdb1e66ccbf56835c92bf88cd38fc100
