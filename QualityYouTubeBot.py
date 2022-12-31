@@ -290,4 +290,3 @@ Link was posted insice channel """+message.channel.name)
 bot.run(token)
 
 
-# openAI = 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
