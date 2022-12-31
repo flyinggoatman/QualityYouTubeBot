@@ -1,27 +1,15 @@
 import re
 from re import search
-from urllib.request import urlopen
-from bs4 import BeautifulSoup
-import requests
 import re
 import json
-import base64
 import os
-import webbrowser
-import pyperclip
-import win32com.client as comclt
-import time
-import pyautogui
-from configparser import ConfigParser
 import discord
 from pytube import YouTube
 from pytube import Channel
 from discord import app_commands
-import pytube
 from sqlalchemy import create_engine, BigInteger, Column, Text, VARCHAR
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-import asyncpg
 from discord.ext import commands
 from discord import interactions
 
