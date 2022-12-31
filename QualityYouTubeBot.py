@@ -85,7 +85,7 @@ async def on_ready():
     print('We have logged in as {0.user}'.format(bot))
     print('Using Discord channel: ', discordName)
     print('The bot has now fully booted up and may be used. \nPlease be advised this bot only supports one Discord server at a time. Future updates will allow for more than one server to be active at a time.')
-    
+    print("test")
     
     
     
