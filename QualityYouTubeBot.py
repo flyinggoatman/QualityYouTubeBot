@@ -97,10 +97,11 @@ async def on_ready():
     bot.run
     discord_channel_int = int(discord_channel)
     discordName = bot.get_channel(discord_channel_int)
+    print()
     print('We have logged in as {0.user}'.format(bot))
     print('Using Discord channel: ', discordName)
     print('The bot has now fully booted up and may be used. \nPlease be advised this bot only supports one Discord server at a time. Future updates will allow for more than one server to be active at a time.')
-    print(OPENAI_API_KEY)
+    print()
 
 
 
@@ -110,6 +111,8 @@ async def on_message(message):
 
     # Retrieve the message history for the channel
 
+
+    guild = message,guild.id
     author = message.author
     timeOutMessage10 = " This message will be deleted in 10 seounds."
     timeOutMessage60 = " This message will be deleted in 60 seounds."
@@ -131,7 +134,7 @@ async def on_message(message):
     discord_channel_int = int(discord_channel)
     if discord_channel_int == message.channel.id:
         channel_url = message.content
-
+        
         # Checking to see if the link is actally a URL
         if re.search("http", message.content):
 
