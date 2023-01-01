@@ -19,6 +19,50 @@ import openai
 from time import sleep
 
 
+
+
+
+
+
+
+
+        
+              
+TOKEN = config('TOKEN', default="EMP") 
+PREFIX = config('PREFIX') 
+DISCORD_CHANNEL = config('DISCORD_CHANEL', default='938207947878703187') 
+SQL_HOST = config('SQL_HOST',default='localhost')
+SQL_USER = config('SQLUSER', default="postgres") 
+SQL_PASS = config('SQLPASS', default="root") 
+SQL_PORT = config('SQL_PORT', default=5432, cast=int)
+SQL_DATABASE = config('SQL_DATABASE')
+OPEN_AI = config('OPEN_AI', default="EMP")
+open_ai = OPEN_AI
+print()  
+if re.search("EMP", TOKEN):
+    print("You are required to add a API key")
+    print("##Create a '.env' file or rename the '.env template' file.##")
+    print("if you choose to make your own, make sure to copy the template file.")
+else:
+       print('TOKEN:', TOKEN)
+print('prefix: ', PREFIX)
+print('sql_host :', SQL_HOST)
+print('sql_user :', SQL_USER)
+print('sq_pass :', SQL_PASS)
+print('sql_port :', SQL_PORT)
+print('sql_database:', SQL_USER)
+if re.search("EMP", open_ai):
+    print("This api key must be set.")
+else:    
+    print('open_ai_token: '+ open_ai)
+        
+
+
+token = TOKEN
+OPENAI_API_KEY = OPEN_AI
+prefix = PREFIX
+discord_channel = DISCORD_CHANNEL
+  
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 bot = commands.Bot(command_prefix='!', intents=intents)
@@ -40,45 +84,8 @@ engine = create_async_engine(
 
 
 # Create a session to manage the connection to the database
-async_session = sessionmaker(
-    engine, expire_on_commit=False, class_=AsyncSession)
 
 Base = declarative_base()
-
-
-
-
-
-
-
-        
-              
-TOKEN = config('TOKEN') 
-PREFIX = config('PREFIX') 
-DISCORD_CHANNEL = config('DISCORD_CHANEL', default='938207947878703187') 
-SQL_HOST = config('SQL_HOST',default='localhost')
-SQL_USER = config('SQLUSER', default="postgres") 
-SQL_PASS = config('SQLPASS', default="root") 
-SQL_PORT = config('SQL_PORT', default=5432, cast=int)
-SQL_DATABASE = config('SQL_DATABASE')
-OPEN_AI = config('OPEN_AI')
-print()  
-print('TOKEN:', TOKEN)
-print('prefix: ', PREFIX)
-print('sql_host :', SQL_HOST)
-print('sql_user :', SQL_USER)
-print('sq_pass :', SQL_PASS)
-print('sql_port :', SQL_PORT)
-print('sql_database:', SQL_USER)
-print('open_ai_token: ', OPEN_AI)
-        
-
-
-token = TOKEN
-OPENAI_API_KEY = OPEN_AI
-prefix = PREFIX
-discord_channel = DISCORD_CHANNEL
-  
 
   
 
@@ -181,9 +188,9 @@ async def on_message(message):
                         if re.search("UCMDQxm7cUx3yXkfeHa5zJIQ", channel_id_link):
                             print("#################################")
 
-                        return channel_name, channel_id_link, channel_about
+                        return channel_name, channel_id_link
 
-                    channel_name, channel_id_link, channel_about = channel_pull(channel_url)
+                    channel_name, channel_id_link, = channel_pull(channel_url)
 
                 elif re.search("com/watch", channel_url) or re.search("/shorts/", channel_url) or re.search("youtu.be", channel_url) or re.search("?list=", channel_url):
 
@@ -220,7 +227,6 @@ async def on_message(message):
                             content = match.group(1)
                             channel_about = html.unescape(content)
                             print(channel_about)
-                            return channel_about
                         else:
                             print("No match found.")
                         print()                        
@@ -241,34 +247,33 @@ async def on_message(message):
                         print("Channel ID: "+channel_id)
                         print("Channel Name: "+channel_name)
                         print("channel Link: "+channel_id_link)
-                        return channel_name, channel_id_link, channel_about
-                    channel_name, channel_id_link, channel_about = video_pull(channel_url)
+                        return channel_name, channel_id_link
+                    channel_name, channel_id_link = video_pull(channel_url)
 
             if re.search("UCMDQxm7cUx3yXkfeHa5zJIQ", channel_id_link):
                 await message.channel.send(timeStanpIncluded+timeOutMessage10+"\n\n\n"+youTubeViwers, delete_after=num10)
 
-            else:
+            else:    # print(response["choices"][0]["text"])
+                
+                await message.channel.send(channel_name+"\r"+channel_id_link)
                     
-                openai.api_key = OPENAI_API_KEY
-                text_input = str(input(channel_about))
-                text_input = text_input.strip()
+            #     openai.api_key = OPENAI_API_KEY
+            #     text_input = str(input(channel_about))
+            #     text_input = text_input.strip()
             
-                response = openai.Completion.create(
-                        engine="text-davinci-002",
-                        prompt="\nDescription\n\ndescribe the following in 20 words that MUST start with\n \n\n\""+channel_name+" - A channel that...'\"\n\n\n"+channel_about+"\n\n\n\n",
-                        temperature=0.9,
-                        max_tokens=256,
-                        top_p=1,
-                        frequency_penalty=0,
-                        presence_penalty=0
-                        )
+            #     response = openai.Completion.create(
+            #             engine="text-davinci-002",
+            #             prompt="\nDescription\n\ndescribe the following in 20 words that MUST start with\n \n\n\""+channel_name+" - A channel that...'\"\n\n\n"+channel_about+"\n\n\n\n",
+            #             temperature=0.9,
+            #             max_tokens=256,
+            #             top_p=1,
+            #             frequency_penalty=0,
+            #             presence_penalty=0
+            #             )
 
 # This is the response
 
-                sleep(5)
-                print(response["choices"][0]["text"])
-                
-                await message.channel.send(channel_name+"\r"+channel_id_link)
+            
                 
 
 
