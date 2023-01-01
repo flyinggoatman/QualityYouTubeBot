@@ -14,6 +14,9 @@ from discord import interactions
 import requests
 import html
 from decouple import config
+from os import environ
+import openai
+from time import sleep
 
 
 intents = discord.Intents.all()
@@ -49,8 +52,7 @@ Base = declarative_base()
 
 
         
-        
-        
+              
 TOKEN = config('TOKEN') 
 PREFIX = config('PREFIX') 
 DISCORD_CHANNEL = config('DISCORD_CHANEL', default='938207947878703187') 
@@ -58,7 +60,8 @@ SQL_HOST = config('SQL_HOST',default='localhost')
 SQL_USER = config('SQLUSER', default="postgres") 
 SQL_PASS = config('SQLPASS', default="root") 
 SQL_PORT = config('SQL_PORT', default=5432, cast=int)
-SQLDATABASE = config('SQLDATABASE')
+SQL_DATABASE = config('SQL_DATABASE')
+OPEN_AI = config('OPEN_AI')
 print()  
 print('TOKEN:', TOKEN)
 print('prefix: ', PREFIX)
@@ -67,11 +70,12 @@ print('sql_user :', SQL_USER)
 print('sq_pass :', SQL_PASS)
 print('sql_port :', SQL_PORT)
 print('sql_database:', SQL_USER)
-print()
+print('open_ai_token: ', OPEN_AI)
         
 
 
 token = TOKEN
+OPENAI_API_KEY = OPEN_AI
 prefix = PREFIX
 discord_channel = DISCORD_CHANNEL
   
@@ -89,7 +93,7 @@ async def on_ready():
     print('We have logged in as {0.user}'.format(bot))
     print('Using Discord channel: ', discordName)
     print('The bot has now fully booted up and may be used. \nPlease be advised this bot only supports one Discord server at a time. Future updates will allow for more than one server to be active at a time.')
-
+    print(OPENAI_API_KEY)
 
 
 
@@ -177,9 +181,9 @@ async def on_message(message):
                         if re.search("UCMDQxm7cUx3yXkfeHa5zJIQ", channel_id_link):
                             print("#################################")
 
-                        return channel_name, channel_id_link
+                        return channel_name, channel_id_link, channel_about
 
-                    channel_name, channel_id_link = channel_pull(channel_url)
+                    channel_name, channel_id_link, channel_about = channel_pull(channel_url)
 
                 elif re.search("com/watch", channel_url) or re.search("/shorts/", channel_url) or re.search("youtu.be", channel_url) or re.search("?list=", channel_url):
 
@@ -216,6 +220,7 @@ async def on_message(message):
                             content = match.group(1)
                             channel_about = html.unescape(content)
                             print(channel_about)
+                            return channel_about
                         else:
                             print("No match found.")
                         print()                        
@@ -236,15 +241,35 @@ async def on_message(message):
                         print("Channel ID: "+channel_id)
                         print("Channel Name: "+channel_name)
                         print("channel Link: "+channel_id_link)
-                        return channel_name, channel_id_link
-                    channel_name, channel_id_link = video_pull(channel_url)
+                        return channel_name, channel_id_link, channel_about
+                    channel_name, channel_id_link, channel_about = video_pull(channel_url)
 
             if re.search("UCMDQxm7cUx3yXkfeHa5zJIQ", channel_id_link):
                 await message.channel.send(timeStanpIncluded+timeOutMessage10+"\n\n\n"+youTubeViwers, delete_after=num10)
 
             else:
+                    
+                openai.api_key = OPENAI_API_KEY
+                text_input = str(input(channel_about))
+                text_input = text_input.strip()
+            
+                response = openai.Completion.create(
+                        engine="text-davinci-002",
+                        prompt="\nDescription\n\ndescribe the following in 20 words that MUST start with\n \n\n\""+channel_name+" - A channel that...'\"\n\n\n"+channel_about+"\n\n\n\n",
+                        temperature=0.9,
+                        max_tokens=256,
+                        top_p=1,
+                        frequency_penalty=0,
+                        presence_penalty=0
+                        )
 
-                await message.channel.send(channel_name+" - "+channel_id_link)
+# This is the response
+
+                sleep(5)
+                print(response["choices"][0]["text"])
+                
+                await message.channel.send(channel_name+"\r"+channel_id_link)
+                
 
 
 
@@ -290,7 +315,3 @@ Link was posted insice channel """+message.channel.name)
 bot.run(token)
 
 
-<<<<<<< HEAD
-
-=======
->>>>>>> a7f3ab24cdb1e66ccbf56835c92bf88cd38fc100
