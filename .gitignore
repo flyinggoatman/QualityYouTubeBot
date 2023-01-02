@@ -4,3 +4,4 @@ config.json
 bot_commands.py check.py
 token.txt
 slash_commands.py
+test_bot_2.py
