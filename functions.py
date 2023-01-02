@@ -1,20 +1,9 @@
 import re
-from re import search
-import json
-import os
-import discord
 from pytube import YouTube
 from pytube import Channel
-from discord import app_commands
-from sqlalchemy import create_engine, BigInteger, Column, Text, VARCHAR
-from sqlalchemy.orm import sessionmaker, declarative_base
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from discord.ext import commands
-from discord import interactions
 import requests
 import html
 from decouple import config
-from os import environ
 
 
 
@@ -82,7 +71,9 @@ def env_pull():
     SQL_DATABASE = config('SQL_DATABASE')
     SQL_TABLE = config('SQL_TABLE')
     OPEN_AI = config('OPEN_AI')
+    AI_ON = config('AI_ON', cast=bool)
     SQL_port_String = str(SQL_PORT)
+    print(AI_ON)
 
     print()  
     print(f'discord_token: {TOKEN}')
@@ -95,7 +86,9 @@ def env_pull():
     print(f'sql_database: {SQL_DATABASE}')
     print(f'sql_table: {SQL_TABLE}')
     print()
-    return TOKEN, PREFIX, DISCORD_CHANNEL, SQL_HOST, SQL_USER, SQL_PORT, SQL_PASS, SQL_TABLE, OPEN_AI, SQL_port_String
+    print(f'OPEN AI SUPPORT: {AI_ON}')
+    print()
+    return TOKEN, PREFIX, DISCORD_CHANNEL, SQL_HOST, SQL_USER, SQL_PORT, SQL_PASS, SQL_TABLE, OPEN_AI, SQL_port_String, AI_ON
 
 
 
@@ -123,25 +116,27 @@ def about_pull(c):
     print()
     return channel_about
 
-def open_ai_func(OPENAI_API_KEY, openai, channel_about):
+def open_ai_func(OPENAI_API_KEY, openai, channel_about, AI_ON):
     # Open AI code, will be added back in future.
-            
-    channel_description = "OPEN AI SUPPORT COMING SOON!"
-    # openai.api_key = OPENAI_API_KEY
-    # text_input = str(input(channel_about))
-    # text_input = text_input.strip()
+    AI_O
+    if AI_ON == False:
+        channel_description = "OPEN AI SUPPORT COMING SOON!"
+    else:
+        # openai.api_key = OPENAI_API_KEY
+        # text_input = str(input(channel_about))
+        # text_input = text_input.strip()
 
-    # response = openai.Completion.create(
-    #         engine="text-davinci-002",
-    #         prompt="\nDescription\n\ndescribe the following in 20 words that MUST start with\n \n\n\""+channel_name+" - A channel that...'\"\n\n\n"+channel_about+"\n\n\n\n",
-    #         temperature=0.9,
-    #         max_tokens=256,
-    #         top_p=1,
-    #         frequency_penalty=0,
-    #         presence_penalty=0
-    #         )
+        # response = openai.Completion.create(
+        #         engine="text-davinci-002",
+        #         prompt="\nDescription\n\ndescribe the following in 20 words that MUST start with\n \n\n\""+channel_name+" - A channel that...'\"\n\n\n"+channel_about+"\n\n\n\n",
+        #         temperature=0.9,
+        #         max_tokens=256,
+        #         top_p=1,
+        #         frequency_penalty=0,
+        #         presence_penalty=0
+        #         )
 
 
     # channel_diecription= print(response["choices"][0]["text"])
-    return channel_description
+        return channel_description
     

@@ -1,23 +1,14 @@
 import re
 from re import search
-import json
-import os
 import discord
-from pytube import YouTube
-from pytube import Channel
 from discord import app_commands
-from sqlalchemy import create_engine, BigInteger, Column, Text, VARCHAR
-from sqlalchemy.orm import sessionmaker, declarative_base
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy import  BigInteger, Column, Text, VARCHAR
+from sqlalchemy.orm import declarative_base
+from sqlalchemy.ext.asyncio import create_async_engine
 from discord.ext import commands
-from discord import interactions
-import requests
-import html
-from decouple import config
-from os import environ
 import openai
-from time import sleep
 from functions import channel_pull, video_pull, env_pull, about_pull, open_ai_func
+
 
 
 
@@ -32,7 +23,7 @@ tree = app_commands.CommandTree(client)
 
         
               
-TOKEN, PREFIX, DISCORD_CHANNEL, SQL_HOST, SQL_USER, SQL_PORT, SQL_PASS, SQL_TABLE, OPEN_AI, SQL_port_String = env_pull()
+TOKEN, PREFIX, DISCORD_CHANNEL, SQL_HOST, SQL_USER, SQL_PORT, SQL_PASS, SQL_TABLE, OPEN_AI, SQL_port_String, AI_ON = env_pull()
 
 ## CHANGE ME##
 engine = create_async_engine(
@@ -81,6 +72,7 @@ async def on_ready():
 async def on_message(message):
 
 # Defining all the
+
 
 
     guild_id = message.guild.id
@@ -133,7 +125,7 @@ async def on_message(message):
 
             else:
                 delete_me_2 = await message.channel.send(f"Please stand by {author.mention}.{timeOutWhenDone}")
-                channel_description = open_ai_func(OPENAI_API_KEY, openai, channel_about)
+                channel_description = open_ai_func(OPENAI_API_KEY, openai, channel_about, AI_ON)
                 print(f"{channel_description}")
                 await message.channel.send(f"{channel_name}\r{channel_id_link}")
                 await delete_me_2.delete()
