@@ -2,3 +2,5 @@ config.json
 .env
 .vscode/settings.json
 bot_commands.py check.py
+token.txt
+slash_commands.py
