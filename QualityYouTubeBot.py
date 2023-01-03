@@ -104,12 +104,9 @@ async def on_message(message):
         
     if discord_channel_int == message.channel.id:
         channel_url = message.content
-        if re.search("http://", channel_url) or re.search("https://", channel_url):
-            if not re.search("youtu", channel_url):
-                await message.delete()
-                await message.channel.send(f"{notYouTube}{timeOutMessage10}", delete_after=num10)
-            return
-        elif re.search("http://", message.content) or re.search("https://", message.content):
+         
+            
+        if re.search("http://", message.content) or re.search("https://", message.content):
             if search("youtu", channel_url):
                 await message.delete()
                 if re.search("/channel/", channel_url) or re.search("@", channel_url) or re.search("/user/", channel_url) or re.search("/c/", channel_url) or not re.search("youtu.", channel_url) and re.search("com/watch", channel_url):
@@ -120,13 +117,16 @@ async def on_message(message):
 
                     channel_name, channel_id_link, channel_about = video_pull(channel_url)
 
-            if re.search("UCMDQxm7cUx3yXkfeHa5zJIQ", channel_id_link) and not re.search():
+            if re.search("UCMDQxm7cUx3yXkfeHa5zJIQ", channel_id_link):
                 await message.channel.send(f"{timeStanpIncluded}{timeOutMessage10}\n\n\n{youTubeViwers}", delete_after=num10)
 
             else:
                 delete_me_2 = await message.channel.send(f"Please stand by {author.mention}.{timeOutWhenDone}")
                 channel_description = open_ai_func(OPENAI_API_KEY, openai, channel_about, AI_ON)
-                print(f"{channel_description}")
+                if channel_description == None:
+                    print("No desription at this time.")
+                else:
+                    print(f"{channel_description}")
                 await message.channel.send(f"{channel_name}\r{channel_id_link}")
                 await delete_me_2.delete()
 

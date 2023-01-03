@@ -118,7 +118,7 @@ def about_pull(c):
 
 def open_ai_func(OPENAI_API_KEY, openai, channel_about, AI_ON):
     # Open AI code, will be added back in future.
-    AI_O
+    
     if AI_ON == False:
         channel_description = "OPEN AI SUPPORT COMING SOON!"
     else:

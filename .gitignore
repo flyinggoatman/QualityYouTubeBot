@@ -5,3 +5,11 @@ bot_commands.py check.py
 token.txt
 slash_commands.py
 test_bot_2.py
+discord.py
+__pycache__/functions.cpython-310.pyc
+imgur.py
+discord2.py
+__pycache__/discord.cpython-310.pyc
+__pycache__/test.cpython-310.pyc
+test.py
+imgur.txt
