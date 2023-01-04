@@ -58,10 +58,12 @@ YouTubeDomain = "https://www.youtube.com/channel/"
 async def on_ready():
     bot.run
     discord_channel_int = int(discord_channel)
-    discordName = bot.get_channel(discord_channel_int)
+    discord_channel_name = bot.get_channel(discord_channel_int)
+    
+
     print()
     print('We have logged in as {0.user}'.format(bot))
-    print(f'Using Discord channel: ', discordName)
+    print(f'Using Discord channel: ', discord_channel_name)
     print(f'The bot has now fully booted up and may be used. \nPlease be advised this bot only supports one Discord server at a time. Future updates will allow for more than one server to be active at a time.')
     print()
 
@@ -70,7 +72,7 @@ async def on_ready():
 # Bot is checking messages
 @bot.event
 async def on_message(message):
-
+guild_id = bot.get_guild(id)
 # Defining all the
 
 
