@@ -24,12 +24,20 @@ tree = app_commands.CommandTree(client)
         
               
 TOKEN, PREFIX, DISCORD_CHANNEL, SQL_HOST, SQL_USER, SQL_PORT, SQL_PASS, SQL_TABLE, OPEN_AI, SQL_port_String, AI_ON = env_pull()
+SQL_ENABLED = False
 
 ## CHANGE ME##
-engine = create_async_engine(
-    f'postgresql+asyncpg://{SQL_USER}:{SQL_PASS}@{SQL_HOST}:{SQL_port_String}/{SQL_TABLE}')
 
-Base = declarative_base()
+
+if SQL_ENABLED == True:
+    
+    engine = create_async_engine(
+        f'postgresql+asyncpg://{SQL_USER}:{SQL_PASS}@{SQL_HOST}:{SQL_port_String}/{SQL_TABLE}')
+
+    Base = declarative_base()
+else:
+    print("SQL Disabled")
+
 
 
 
@@ -72,7 +80,7 @@ async def on_ready():
 # Bot is checking messages
 @bot.event
 async def on_message(message):
-guild_id = bot.get_guild(id)
+
 # Defining all the
 
 
