@@ -138,11 +138,11 @@ async def on_message(message):
 
             else:
                 delete_me_2 = await message.channel.send(f"Please stand by {author.mention}.{timeOutWhenDone}")
-                channel_description = open_ai_func(OPENAI_API_KEY, openai, channel_about, AI_ON)
-                if channel_description == None:
-                    print("No desription at this time.")
-                else:
-                    print(f"{channel_description}")
+                # channel_description = open_ai_func(OPENAI_API_KEY, openai, channel_about, AI_ON)
+                # if channel_description == None:
+                #     print("No desription at this time.")
+                # else:
+                #     print(f"{channel_description}")
                 await message.channel.send(f"{channel_name}\r{channel_id_link}")
                 await delete_me_2.delete()
 
