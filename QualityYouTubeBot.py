@@ -11,7 +11,6 @@ from functions import channel_pull, video_pull, env_pull, about_pull, open_ai_fu
 
 
 
-
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 bot = commands.Bot(command_prefix='! ', intents=intents)
@@ -22,9 +21,10 @@ tree = app_commands.CommandTree(client)
 
 
         
-              
-TOKEN, PREFIX, DISCORD_CHANNEL, SQL_HOST, SQL_USER, SQL_PORT, SQL_PASS, SQL_TABLE, OPEN_AI, SQL_port_String, AI_ON = env_pull()
-SQL_ENABLED = False
+DEBUG_MODE = False         
+TOKEN, PREFIX, DISCORD_CHANNEL, SQL_HOST, SQL_USER, SQL_PORT, SQL_DATABASE, SQL_PASS, SQL_TABLE, OPEN_AI, SQL_port_String, AI_ON, DEBUG_MODE = env_pull(DEBUG_MODE)
+SQL_ENABLED = True
+
 
 ## CHANGE ME##
 
@@ -33,6 +33,11 @@ if SQL_ENABLED == True:
     
     engine = create_async_engine(
         f'postgresql+asyncpg://{SQL_USER}:{SQL_PASS}@{SQL_HOST}:{SQL_port_String}/{SQL_TABLE}')
+    if DEBUG_MODE == True:
+        print("Debug Mode Enabled")
+        print(f"Connected to {SQL_HOST}'s database called {SQL_DATABASE} inside the table {SQL_TABLE} as {SQL_USER}")
+    else:
+        print("Debug Mode Disabled.")
 
     Base = declarative_base()
 else:
@@ -71,8 +76,9 @@ async def on_ready():
 
     print()
     print('We have logged in as {0.user}'.format(bot))
-    print(f'Using Discord channel: ', discord_channel_name)
-    print(f'The bot has now fully booted up and may be used. \nPlease be advised this bot only supports one Discord server at a time. Future updates will allow for more than one server to be active at a time.')
+    if DEBUG_MODE == True:
+        print(f'Using Discord channel: ', discord_channel_name)
+        print(f'The bot has now fully booted up and may be used. \nPlease be advised this bot only supports one Discord server at a time. Future updates will allow for more than one server to be active at a time.')
     print()
 
 
@@ -121,11 +127,11 @@ async def on_message(message):
                 await message.delete()
                 if re.search("/channel/", channel_url) or re.search("@", channel_url) or re.search("/user/", channel_url) or re.search("/c/", channel_url) or not re.search("youtu.", channel_url) and re.search("com/watch", channel_url):
 
-                    channel_name, channel_id_link, channel_about = channel_pull(channel_url)
+                    channel_name, channel_id_link, channel_about = channel_pull(channel_url, DEBUG_MODE)
 
                 elif re.search("com/watch", channel_url) or re.search("/shorts/", channel_url) or re.search("youtu.be", channel_url) or re.search("?list=", channel_url):
 
-                    channel_name, channel_id_link, channel_about = video_pull(channel_url)
+                    channel_name, channel_id_link, channel_about = video_pull(channel_url, DEBUG_MODE)
 
             if re.search("UCMDQxm7cUx3yXkfeHa5zJIQ", channel_id_link):
                 await message.channel.send(f"{timeStanpIncluded}{timeOutMessage10}\n\n\n{youTubeViwers}", delete_after=num10)

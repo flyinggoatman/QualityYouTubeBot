@@ -12,7 +12,7 @@ from decouple import config
 
 
 
-def channel_pull(channel_url):
+def channel_pull(channel_url, DEBUG_MODE):
     c = Channel(channel_url)
     channel_name = c.channel_name
     channel_id = c.channel_id
@@ -21,14 +21,14 @@ def channel_pull(channel_url):
     channel_about = about_pull(c)
 
 
-
-    if re.search("UCMDQxm7cUx3yXkfeHa5zJIQ", channel_id_link):
-        print(f"######## Blocked Channel ########")
-    print(f"Channel Name: {channel_name}")
-    print(f"Channel ID: {channel_id}")
-    print(f"Channel Link: {channel_id_link}")
-    if re.search("UCMDQxm7cUx3yXkfeHa5zJIQ", channel_id_link):
-        print(f"#################################")
+    if DEBUG_MODE == True:
+        if re.search("UCMDQxm7cUx3yXkfeHa5zJIQ", channel_id_link):
+            print(f"######## Blocked Channel ########")
+        print(f"Channel Name: {channel_name}")
+        print(f"Channel ID: {channel_id}")
+        print(f"Channel Link: {channel_id_link}")
+        if re.search("UCMDQxm7cUx3yXkfeHa5zJIQ", channel_id_link):
+            print(f"#################################")
     return channel_name, channel_id_link, channel_about
         
     
@@ -37,7 +37,7 @@ def channel_pull(channel_url):
     
     
         
-def video_pull(channel_url):
+def video_pull(channel_url, DEBUG_MODE):
     YTV = YouTube(channel_url)
     channel_id = YTV.channel_id
     channel_id_link = YTV.channel_url
@@ -53,42 +53,46 @@ def video_pull(channel_url):
 
     
     # This prints out the channel information to the Console.
-    print(f"Channel ID: {channel_id}")
-    print(f"Channel Name: {channel_name}")
-    print(f"channel Link: {channel_id_link}")
+    if DEBUG_MODE == True:
+        print(f"Channel ID: {channel_id}")
+        print(f"Channel Name: {channel_name}")
+        print(f"channel Link: {channel_id_link}")
     return channel_name, channel_id_link, channel_about
 
 
 
-def env_pull():
-    TOKEN = config('TOKEN') 
-    PREFIX = config('PREFIX') 
-    DISCORD_CHANNEL = config('DISCORD_CHANEL ', default='938207947878703187') 
+def env_pull(DEBUG_MODE):
+    TOKEN = config('TOKEN') or ''
+    PREFIX = config('PREFIX') or ''
+    DISCORD_CHANNEL = config('DISCORD_CHANEL ', default='938207947878703187') or ''
     SQL_HOST = config('SQL_HOST', default='localhost')
-    SQL_USER = config('SQL_USER') 
-    SQL_PASS = config('SQL_PASS') 
-    SQL_PORT = config('SQL_PORT', cast=int)
-    SQL_DATABASE = config('SQL_DATABASE')
-    SQL_TABLE = config('SQL_TABLE')
-    OPEN_AI = config('OPEN_AI')
-    AI_ON = config('AI_ON', cast=bool)
+    SQL_USER = config('SQL_USER') or ''
+    SQL_PASS = config('SQL_PASS') or ''
+    SQL_PORT = config('SQL_PORT', cast=int) or 5432
+    SQL_DATABASE = config('SQL_DATABASE') or ''
+    SQL_TABLE = config('SQL_TABLE') or ''
+    OPEN_AI = config('OPEN_AI') or ''
+    AI_ON = config('AI_ON', cast=bool) or 'False'
+    DEBUG_MODE = config ('DEBUG_MODE', cast=bool) or 'False'
     SQL_port_String = str(SQL_PORT)
-    print(AI_ON)
-
-    print()  
-    print(f'discord_token: {TOKEN}')
-    print(f'open_ai_token: {OPEN_AI}')
-    print(f'prefix:  {PREFIX}')
-    print(f'sql_host: {SQL_HOST}')
-    print(f'sql_user: {SQL_USER}')
-    print(f'sq_pass:  {SQL_PASS}')
-    print(f'sql_port: {SQL_PORT}')
-    print(f'sql_database: {SQL_DATABASE}')
-    print(f'sql_table: {SQL_TABLE}')
-    print()
-    print(f'OPEN AI SUPPORT: {AI_ON}')
-    print()
-    return TOKEN, PREFIX, DISCORD_CHANNEL, SQL_HOST, SQL_USER, SQL_PORT, SQL_PASS, SQL_TABLE, OPEN_AI, SQL_port_String, AI_ON
+    if DEBUG_MODE == True:
+        print()  
+        print(f'discord_token: {TOKEN}')
+        print(f'open_AI_token: {OPEN_AI}')
+        print(f'prefix:  {PREFIX}')
+        print(f'sql_host: {SQL_HOST}')
+        print(f'sql_user: {SQL_USER}')
+        print(f'sq_pass:  {SQL_PASS}')
+        print(f'sql_port: {SQL_PORT}')
+        print(f'sql_database: {SQL_DATABASE}')
+        print(f'sql_table: {SQL_TABLE}')
+        print()
+        print(f'opem_AI_support: {AI_ON}')
+        print(f'debug_mode: {DEBUG_MODE}')
+        print()
+    else:
+        print()
+    return TOKEN, PREFIX, DISCORD_CHANNEL, SQL_HOST, SQL_USER, SQL_PORT, SQL_DATABASE, SQL_PASS, SQL_TABLE, OPEN_AI, SQL_port_String, AI_ON, DEBUG_MODE
 
 
 
@@ -114,7 +118,6 @@ def about_pull(c):
     else:
         print(f"No match found.")
     print()
-    return channel_about
 
 def open_ai_func(OPENAI_API_KEY, openai, channel_about, AI_ON):
     # Open AI code, will be added back in future.
