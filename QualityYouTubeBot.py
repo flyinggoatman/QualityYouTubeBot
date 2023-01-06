@@ -78,15 +78,24 @@ async def on_ready():
     print()
     print('We have logged in as {0.user}'.format(bot))
 
-    input_string = "Welcome to the QualityYouTubeBot"
-    input_string2 = "If you would like to turn on input DEBUG MODE then please use the .env file as a template."
-    hash ="#"
-    output_string = add_tags(input_string)
-    output_string2 = add_tags(input_string2)
-    hash_string = add_tags(hash)
-    print(output_string)  # Output: "###### Hello, world! ######"
-    print(output_string2)
-    print(hash_string+hash*2+"#")
+    welcome = " Welcome to the QualityYouTubeBot "
+    debug_message = " If you would like to turn on input DEBUG MODE then please use the .env file as a template. "
+    debug_message_2 = " After you've created a .env file from the template and set up all the values inside the file. You should be good to go! "
+    bot_on = ' We have logged in as {0.user} '
+    # hash ="#"
+    # output_string = add_tags(input_string)
+    # output_string2 = add_tags(input_string2)
+    # hash_string = add_tags(hash)
+    # print(output_string)  # Output: "###### Hello, world! ######"
+    # print(output_string2)
+    # print(hash_string+hash*2+"#")
+    print(f"{'##':#^150}") 
+    print(f"{welcome:#^150}")
+    print(f"{debug_message:#^150}")
+    print(f"{debug_message_2:#^150}")
+    print(f"{bot_on:#^135}".format(bot))
+    print(f"{'##':#^150}")
+   
 
    
     if DEBUG_MODE == True:

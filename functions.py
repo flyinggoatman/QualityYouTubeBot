@@ -143,15 +143,3 @@ def open_ai_func(OPENAI_API_KEY, openai, channel_about, AI_ON):
     # channel_diecription= print(response["choices"][0]["text"])
         return channel_description
     
-    
-def add_tags(string):
-
-    if re.search("#", string):
-        num_tags = (100 - len(string)) // 2
-        return '#' * num_tags + string + '#' * num_tags
-        return num_tags
-    else: 
-        num_tags = (100 - len(string)) // 2
-        return '#' * num_tags + ' ' + string + ' ' + '#' * num_tags 
-        return num_tags
-    return num_tags
