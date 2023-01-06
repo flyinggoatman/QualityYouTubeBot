@@ -74,25 +74,17 @@ async def on_ready():
     discord_channel_name = bot.get_channel(discord_channel_int)
     
     hello = f" Welcome to the QualityYouTubeBot "
-    log_message = "You can "
     print()
-    print('We have logged in as {0.user}'.format(bot))
 
     welcome = " Welcome to the QualityYouTubeBot "
     debug_message = " If you would like to turn on input DEBUG MODE then please use the .env file as a template. "
     debug_message_2 = " After you've created a .env file from the template and set up all the values inside the file. You should be good to go! "
     bot_on = ' We have logged in as {0.user} '
-    # hash ="#"
-    # output_string = add_tags(input_string)
-    # output_string2 = add_tags(input_string2)
-    # hash_string = add_tags(hash)
-    # print(output_string)  # Output: "###### Hello, world! ######"
-    # print(output_string2)
-    # print(hash_string+hash*2+"#")
     print(f"{'##':#^150}") 
     print(f"{welcome:#^150}")
     print(f"{debug_message:#^150}")
     print(f"{debug_message_2:#^150}")
+    print(f"{'##':#^150}")
     print(f"{bot_on:#^135}".format(bot))
     print(f"{'##':#^150}")
    
