@@ -7,7 +7,7 @@ from sqlalchemy.orm import declarative_base
 from sqlalchemy.ext.asyncio import create_async_engine
 from discord.ext import commands
 import openai
-from functions import channel_pull, video_pull, env_pull, about_pull, open_ai_func
+from functions import channel_pull, video_pull, env_pull, about_pull, open_ai_func, add_tags
 
 
 
@@ -73,9 +73,22 @@ async def on_ready():
     discord_channel_int = int(discord_channel)
     discord_channel_name = bot.get_channel(discord_channel_int)
     
-
+    hello = f" Welcome to the QualityYouTubeBot "
+    log_message = "You can "
     print()
     print('We have logged in as {0.user}'.format(bot))
+
+    input_string = "Welcome to the QualityYouTubeBot"
+    input_string2 = "If you would like to turn on input DEBUG MODE then please use the .env file as a template."
+    hash ="#"
+    output_string = add_tags(input_string)
+    output_string2 = add_tags(input_string2)
+    hash_string = add_tags(hash)
+    print(output_string)  # Output: "###### Hello, world! ######"
+    print(output_string2)
+    print(hash_string+hash*2+"#")
+
+   
     if DEBUG_MODE == True:
         print(f'Using Discord channel: ', discord_channel_name)
         print(f'The bot has now fully booted up and may be used. \nPlease be advised this bot only supports one Discord server at a time. Future updates will allow for more than one server to be active at a time.')
