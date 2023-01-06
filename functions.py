@@ -96,7 +96,7 @@ def env_pull(DEBUG_MODE):
 
 
 
-def about_pull(c):
+def about_pull(c, DEBUG_MODE):
     url = c.about_url
 
     # Send an HTTP GET request to the URL
@@ -116,8 +116,10 @@ def about_pull(c):
         channel_about = html.unescape(content)
         return channel_about
     else:
-        print(f"No match found.")
-    print()
+        if DEBUG_MODE == True:
+            print(f"No match found.")
+        else:
+            return
 
 def open_ai_func(OPENAI_API_KEY, openai, channel_about, AI_ON):
     # Open AI code, will be added back in future.
