@@ -7,7 +7,7 @@ from sqlalchemy.orm import declarative_base
 from sqlalchemy.ext.asyncio import create_async_engine
 from discord.ext import commands
 import openai
-from functions import channel_pull, video_pull, env_pull, about_pull, open_ai_func, add_tags
+from functions import channel_pull, video_pull, env_pull, about_pull, open_ai_func
 
 
 
