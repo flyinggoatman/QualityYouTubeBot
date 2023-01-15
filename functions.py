@@ -18,7 +18,7 @@ def channel_pull(channel_url, DEBUG_MODE):
     channel_id = c.channel_id
     channel_id_link = f"https://youtube.com/channel/{channel_id}"
     url = c.about_url
-    channel_about = about_pull(c)
+    channel_about = about_pull(c, DEBUG_MODE)
 
 
     if DEBUG_MODE == True:
@@ -48,7 +48,7 @@ def video_pull(channel_url, DEBUG_MODE):
     channel_html = c._about_html
     
     
-    channel_about = about_pull(c)
+    channel_about = about_pull(c, DEBUG_MODE)
     
 
     
@@ -121,27 +121,28 @@ def about_pull(c, DEBUG_MODE):
         else:
             return
 
-def open_ai_func(OPENAI_API_KEY, openai, channel_about, AI_ON):
+async def open_ai_func(OPENAI_API_KEY, openai, channel_about, AI_ON, channel_name, message):
     # Open AI code, will be added back in future.
     
     if AI_ON == False:
         channel_description = "OPEN AI SUPPORT COMING SOON!"
     else:
-        # openai.api_key = OPENAI_API_KEY
-        # text_input = str(input(channel_about))
-        # text_input = text_input.strip()
+        openai.api_key = OPENAI_API_KEY
+        text_input = str(input(channel_about))
+        text_input = text_input.strip()
 
-        # response = openai.Completion.create(
-        #         engine="text-davinci-002",
-        #         prompt="\nDescription\n\ndescribe the following in 20 words that MUST start with\n \n\n\""+channel_name+" - A channel that...'\"\n\n\n"+channel_about+"\n\n\n\n",
-        #         temperature=0.9,
-        #         max_tokens=256,
-        #         top_p=1,
-        #         frequency_penalty=0,
-        #         presence_penalty=0
-        #         )
+        response = openai.Completion.create(
+                engine="text-davinci-002",
+                prompt=f"\nDescription\n\ndescribe the following detailed in 20 to 30 words that MUST start with\n \n\n\' A channel that...' in one sentance\"\n\n\n{channel_about}\n\n\n\n",
+                temperature=1.0,
+                max_tokens=256,
+                top_p=1,
+                frequency_penalty=1.0,
+                presence_penalty=0
+                )
 
+        delete_message = await message.channel.send(response["choices"][0]["text"])
+        channel_description =  print(response["choices"][0]["text"])
+        await delete_message.delete()
+    return channel_description
 
-    # channel_diecription= print(response["choices"][0]["text"])
-        return channel_description
-    

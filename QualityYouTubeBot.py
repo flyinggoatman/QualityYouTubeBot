@@ -21,7 +21,7 @@ tree = app_commands.CommandTree(client)
 
 
         
-DEBUG_MODE = False         
+DEBUG_MODE = True         
 TOKEN, PREFIX, DISCORD_CHANNEL, SQL_HOST, SQL_USER, SQL_PORT, SQL_DATABASE, SQL_PASS, SQL_TABLE, OPEN_AI, SQL_port_String, AI_ON, DEBUG_MODE = env_pull(DEBUG_MODE)
 SQL_ENABLED = True
 
@@ -79,11 +79,15 @@ async def on_ready():
     welcome = " Welcome to the QualityYouTubeBot "
     debug_message = " If you would like to turn on input DEBUG MODE then please use the .env file as a template. "
     debug_message_2 = " After you've created a .env file from the template and set up all the values inside the file. You should be good to go! "
+    debug_on = " Debug mode is ENABLED "
     bot_on = ' We have logged in as {0.user} '
     print(f"{'##':#^150}") 
     print(f"{welcome:#^150}")
-    print(f"{debug_message:#^150}")
-    print(f"{debug_message_2:#^150}")
+    if DEBUG_MODE == False:
+        print(f"{debug_message:#^150}")
+        print(f"{debug_message_2:#^150}")
+    else:
+        print(f"{debug_on:#^150}")
     print(f"{'##':#^150}")
     print(f"{bot_on:#^135}".format(bot))
     print(f"{'##':#^150}")
@@ -138,10 +142,12 @@ async def on_message(message):
             
         if re.search("http://", message.content) or re.search("https://", message.content):
             if search("youtu", channel_url):
+                delete_me_1 = await message.channel.send(f"Give me a moment {author.mention}, I need to think really hard!", delete_after=5)
                 await message.delete()
                 if re.search("/channel/", channel_url) or re.search("@", channel_url) or re.search("/user/", channel_url) or re.search("/c/", channel_url) or not re.search("youtu.", channel_url) and re.search("com/watch", channel_url):
 
                     channel_name, channel_id_link, channel_about = channel_pull(channel_url, DEBUG_MODE)
+                
 
                 elif re.search("com/watch", channel_url) or re.search("/shorts/", channel_url) or re.search("youtu.be", channel_url) or re.search("?list=", channel_url):
 
@@ -152,18 +158,19 @@ async def on_message(message):
 
             else:
                 delete_me_2 = await message.channel.send(f"Please stand by {author.mention}.{timeOutWhenDone}")
-                # channel_description = open_ai_func(OPENAI_API_KEY, openai, channel_about, AI_ON)
-                # if channel_description == None:
-                #     print("No desription at this time.")
-                # else:
-                #     print(f"{channel_description}")
+                if AI_ON == True:
+                    channel_description = await open_ai_func(OPENAI_API_KEY, openai, channel_about, AI_ON, channel_name, message)
+                    print(f"{channel_description}")
+                    return channel_description
+                
+                
                 await message.channel.send(f"{channel_name}\r{channel_id_link}")
                 await delete_me_2.delete()
 
 
         elif re.search("How many channels are they?", channel_url):
             await message.delete()
-            delete_me_1 = await message.channel.send(f"Give me a moment {author.mention}, I need to think really hard!")
+            
             channel = bot.get_channel(discord_channel_int)
             count = 0
 
