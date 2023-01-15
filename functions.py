@@ -4,8 +4,42 @@ from pytube import Channel
 import requests
 import html
 from decouple import config
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy import Column, Text, VARCHAR
+from sqlalchemy.orm import declarative_base
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
+
+Base = declarative_base()
+
+class Channels(Base):
+    __tablename__ = "ChannelList"
+
+    channel_id = Column("Channel ID", VARCHAR, primary_key=True)
+    channel_name = Column("Channel Name", Text)
+    channel_id_link = Column("Channel URL", Text)
+    channel_description = Column("Channel Description", Text)
+    channel_logo = Column("Channel Logo", Text, nullable=True, default=None)
 
 
+engine = create_async_engine('postgresql+asyncpg://postgres:rootfly@localhost:5432/QualityYouTubeBot')
+
+async_session = AsyncSession(bind=engine)
+
+async def insert_channel(channel_id, channel_name, channel_id_link, channel_description=None, channel_logo=None):
+    async with async_session as session:
+        print(channel_name)
+        new_channel = Channels(channel_id=channel_id, channel_name=channel_name, channel_id_link=channel_id_link, channel_description=channel_description, channel_logo=channel_logo)
+        try:
+            session.add(new_channel)
+            await session.commit()
+        except IntegrityError:
+            print(f"channel {channel_name} is already in the database.")
+            await session.rollback()
+            return f"channel {channel_name} is already in the database."
+        else:
+            print(f"Successfully added {channel_name} to the database.")
+            return f"Successfully added {channel_name} to the database."
 
 
 
@@ -29,7 +63,7 @@ def channel_pull(channel_url, DEBUG_MODE):
         print(f"Channel Link: {channel_id_link}")
         if re.search("UCMDQxm7cUx3yXkfeHa5zJIQ", channel_id_link):
             print(f"#################################")
-    return channel_name, channel_id_link, channel_about
+    return channel_name, channel_id_link, channel_about, channel_id
         
     
     
@@ -57,14 +91,14 @@ def video_pull(channel_url, DEBUG_MODE):
         print(f"Channel ID: {channel_id}")
         print(f"Channel Name: {channel_name}")
         print(f"channel Link: {channel_id_link}")
-    return channel_name, channel_id_link, channel_about
+    return channel_name, channel_id_link, channel_about, channel_id
 
 
 
 def env_pull(DEBUG_MODE):
     TOKEN = config('TOKEN') or ''
     PREFIX = config('PREFIX') or ''
-    DISCORD_CHANNEL = config('DISCORD_CHANEL ', default='938207947878703187') or ''
+    DISCORD_CHANNEL = config('DISCORD_CHANNEL ', default='938207947878703187') or ''
     SQL_HOST = config('SQL_HOST', default='localhost')
     SQL_USER = config('SQL_USER') or ''
     SQL_PASS = config('SQL_PASS') or ''
