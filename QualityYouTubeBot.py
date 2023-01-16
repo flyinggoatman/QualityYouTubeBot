@@ -162,9 +162,10 @@ async def on_message(message):
                     channel_description = await open_ai_func(OPENAI_API_KEY, openai, channel_about, AI_ON, channel_name, message)
                     print(f"{channel_description}")
                 print(f"{channel_name}\r{channel_id_link}")
+                await insert_channel(channel_id, channel_name, channel_id_link, channel_description)
                 await message.channel.send(f"{channel_name}\r{channel_id_link}")
                 await delete_me_2.delete()
-                await insert_channel(channel_id, channel_name, channel_id_link, channel_description)
+                
                 
                 
 

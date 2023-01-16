@@ -35,11 +35,13 @@ async def insert_channel(channel_id, channel_name, channel_id_link, channel_desc
             await session.commit()
         except IntegrityError:
             print(f"channel {channel_name} is already in the database.")
+            already_posted = True
             await session.rollback()
-            return f"channel {channel_name} is already in the database."
+            return already_posted
         else:
             print(f"Successfully added {channel_name} to the database.")
-            return f"Successfully added {channel_name} to the database."
+        
+        return already_posted
 
 
 
