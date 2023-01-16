@@ -7,7 +7,7 @@ from sqlalchemy.orm import declarative_base
 from sqlalchemy.ext.asyncio import create_async_engine
 from discord.ext import commands
 import openai
-from functions import channel_pull, video_pull, env_pull, about_pull, open_ai_func, Channels, insert_channel
+from functions import channel_pull, video_pull, env_pull, about_pull, open_ai_func, Channels, insert_channel, check_channel_exists
 
 
 
@@ -143,6 +143,7 @@ async def on_message(message):
             
         if re.search("http://", message.content) or re.search("https://", message.content):
             if search("youtu", channel_url):
+                delete_me_1 = await message.channel.send(f"Give me a moment {author.mention}, I need to think really hard!", delete_after=5)
                 await message.delete()
                 if re.search("/channel/", channel_url) or re.search("@", channel_url) or re.search("/user/", channel_url) or re.search("/c/", channel_url) or not re.search("youtu.", channel_url) and re.search("com/watch", channel_url):
 
@@ -161,13 +162,18 @@ async def on_message(message):
                 if AI_ON == True:
                     channel_description = await open_ai_func(OPENAI_API_KEY, openai, channel_about, AI_ON, channel_name, message)
                     print(f"{channel_description}")
-                print(f"{channel_name}\r{channel_id_link}")
-                await insert_channel(channel_id, channel_name, channel_id_link, channel_description)
-                await message.channel.send(f"{channel_name}\r{channel_id_link}")
+                
                 await delete_me_2.delete()
                 
+                if await check_channel_exists(channel_id):
+                    print(f"channel {channel_id} is already in the database.")
+                    await message.channel.send(f"The channel {channel_id} is already in the database.")
+                else:
+                    await insert_channel(channel_id, channel_name, channel_id_link, channel_description)
+                    await message.channel.send(f"{channel_name}\r{channel_id_link}")
+                print(f"{channel_name}\r{channel_id_link}")
                 
-                
+                                
 
 
         elif re.search("How many channels are they?", channel_url):

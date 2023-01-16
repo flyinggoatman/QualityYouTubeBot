@@ -5,10 +5,11 @@ import requests
 import html
 from decouple import config
 from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy import Column, Text, VARCHAR
+from sqlalchemy import Column, Text, VARCHAR, DateTime, select
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
+import datetime
 
 Base = declarative_base()
 
@@ -20,6 +21,7 @@ class Channels(Base):
     channel_id_link = Column("Channel URL", Text)
     channel_description = Column("Channel Description", Text)
     channel_logo = Column("Channel Logo", Text, nullable=True, default=None)
+    created_at = Column(DateTime, nullable=False)
 
 
 engine = create_async_engine('postgresql+asyncpg://postgres:rootfly@localhost:5432/QualityYouTubeBot')
@@ -28,22 +30,24 @@ async_session = AsyncSession(bind=engine)
 
 async def insert_channel(channel_id, channel_name, channel_id_link, channel_description=None, channel_logo=None):
     async with async_session as session:
-        print(channel_name)
-        new_channel = Channels(channel_id=channel_id, channel_name=channel_name, channel_id_link=channel_id_link, channel_description=channel_description, channel_logo=channel_logo)
+        created_at = datetime.datetime.now() # get current date and time
+        new_channel = Channels(channel_id=channel_id, channel_name=channel_name, channel_id_link=channel_id_link, channel_description=channel_description, channel_logo=channel_logo, created_at=created_at)
         try:
             session.add(new_channel)
             await session.commit()
         except IntegrityError:
             print(f"channel {channel_name} is already in the database.")
-            already_posted = True
             await session.rollback()
-            return already_posted
         else:
             print(f"Successfully added {channel_name} to the database.")
         
-        return already_posted
+        
 
 
+async def check_channel_exists(channel_id):
+    async with async_session as session:
+        exists = await session.execute(select(Channels).where(Channels.channel_id == channel_id))
+        return exists.scalars().first() is not None
 
 
 
@@ -129,6 +133,7 @@ def env_pull(DEBUG_MODE):
     else:
         print()
     return TOKEN, PREFIX, DISCORD_CHANNEL, SQL_HOST, SQL_USER, SQL_PORT, SQL_DATABASE, SQL_PASS, SQL_TABLE, OPEN_AI, SQL_port_String, AI_ON, DEBUG_MODE
+
 
 
 

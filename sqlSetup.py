@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, BigInteger, Column,  Text, VARCHAR
+from sqlalchemy import create_engine, BigInteger, Column,  Text, VARCHAR, DateTime
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 import asyncpg
@@ -12,6 +12,8 @@ class Channels(Base):
     channel_link = Column("Channel URL", Text)
     channel_desription = Column("Channel Description", Text)
     channel_logo = Column("Channel Logo", Text, nullable=True, default=None)
+    created_at = Column(DateTime, nullable=False)
+    
 
 class Config(Base):
     __tablename__ = "Config"
