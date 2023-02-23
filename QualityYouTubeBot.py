@@ -72,6 +72,12 @@ async def on_ready():
     bot.run
     discord_channel_int = int(discord_channel)
     discord_channel_name = bot.get_channel(discord_channel_int)
+    global allowed_channels
+    try:
+        with open("allowed_channels.pkl", "rb") as f:
+            allowed_channels = pickle.load(f)
+    except FileNotFoundError:
+        allowed_channels = []
     
     hello = f" Welcome to the QualityYouTubeBot "
     print()
@@ -134,71 +140,49 @@ async def on_message(message):
         return
 
     discord_channel_int = int(discord_channel)
-    
-        
-        
-    if discord_channel_int == message.channel.id:
-        channel_url = message.content
-         
-            
-        if re.search("http://", message.content) or re.search("https://", message.content):
-            if search("youtu", channel_url):
-                delete_me_1 = await message.channel.send(f"Give me a moment {author.mention}, I need to think really hard!", delete_after=5)
-                await message.delete()
-                if re.search("/channel/", channel_url) or re.search("@", channel_url) or re.search("/user/", channel_url) or re.search("/c/", channel_url) or not re.search("youtu.", channel_url) and re.search("com/watch", channel_url):
-
-                    channel_name, channel_id_link, channel_about, channel_id = channel_pull(channel_url, DEBUG_MODE)
-                
-
-                elif re.search("com/watch", channel_url) or re.search("/shorts/", channel_url) or re.search("youtu.be", channel_url) or re.search("?list=", channel_url):
-
-                    channel_name, channel_id_link, channel_about, channel_id = video_pull(channel_url, DEBUG_MODE)
-
-            if re.search("UCMDQxm7cUx3yXkfeHa5zJIQ", channel_id_link):
-                await message.channel.send(f"{timeStanpIncluded}{timeOutMessage10}\n\n\n{youTubeViwers}", delete_after=num10)
-
-            else:
-                delete_me_2 = await message.channel.send(f"Please stand by {author.mention}.{timeOutWhenDone}")
-                if AI_ON == True:
-                    channel_description = await open_ai_func(OPENAI_API_KEY, openai, channel_about, AI_ON, channel_name, message)
-                    print(f"{channel_description}")
-                
-                await delete_me_2.delete()
-                
-                if await check_channel_exists(channel_id):
-                    print(f"channel {channel_id} is already in the database.")
-                    await message.channel.send(f"The channel {channel_id} is already in the database.")
-                else:
-                    await insert_channel(channel_id, channel_name, channel_id_link, channel_description)
-                    await message.channel.send(f"{channel_name}\r{channel_id_link}")
-                print(f"{channel_name}\r{channel_id_link}")
-                
-                                
-
-
-        elif re.search("How many channels are they?", channel_url):
-            await message.delete()
-            
-            channel = bot.get_channel(discord_channel_int)
-            count = 0
-
-            async for _ in channel.history(limit=None, oldest_first=None):  
-                count += 1
-            print(f"{count} messages in this channel")
-
-            await delete_me_1.delete()
-            await message.channel.send(f"{count} messages in this channel.")
-
-        elif re.search("Delete and post all links", channel_url):
-
-
-            print(f"Delete support coming soon!")
-        else:
-
-            print(f"""Link not supported or wrong channel.
-Link was posted inside channel {message.channel.name}""")
-            
-    else:
+    if discord_channel_int != message.channel.id:
         return
+
+    channel_url = message.content
+    if re.search("http://", message.content) or re.search("https://", message.content) and search("youtu", channel_url):
+        delete_me_1 = await message.channel.send(f"Give me a moment {author.mention}, I need to think really hard!", delete_after=5)
+        await message.delete()
+        if re.search("/channel/", channel_url) or re.search("@", channel_url) or re.search("/user/", channel_url) or re.search("/c/", channel_url) or not re.search("youtu.", channel_url) and re.search("com/watch", channel_url):
+            channel_name, channel_id_link, channel_about, channel_id = channel_pull(channel_url, DEBUG_MODE)
+        elif re.search("com/watch", channel_url) or re.search("/shorts/", channel_url) or re.search("youtu.be", channel_url) or re.search("?list=", channel_url):
+            channel_name, channel_id_link, channel_about, channel_id = video_pull(channel_url, DEBUG_MODE)
+
+        if re.search("UCMDQxm7cUx3yXkfeHa5zJIQ", channel_id_link):
+            await message.channel.send(f"{timeStanpIncluded}{timeOutMessage10}\n\n\n{youTubeViwers}", delete_after=num10)
+        else:
+            delete_me_2 = await message.channel.send(f"Please stand by {author.mention}.{timeOutWhenDone}")
+            if AI_ON == True:
+                channel_description = await open_ai_func(OPENAI_API_KEY, openai, channel_about, AI_ON, channel_name, message)
+                print(f"{channel_description}")
+            await delete_me_2.delete()
+            if await check_channel_exists(channel_id):
+                print(f"channel {channel_name} is already in the database.")
+                await message.channel.send(f"The channel ***{channel_name}*** is already in the database.", delete_after=10)
+            else:
+                await insert_channel(channel_id, channel_name, channel_id_link, channel_description)
+                await message.channel.send(f"{channel_name}\r{channel_id_link}\rPosted by {author.display_name}")
+                print(f"{channel_name}\r{channel_id_link}\rPosted by {author.name}")
+            print(f"{channel_name}\r{channel_id_link}")
+
+    elif re.search("!channels", channel_url):
+        await message.delete()
+        channel = bot.get_channel(discord_channel_int)
+        count = 0
+        async for _ in channel.history(limit=None, oldest_first=None):
+            count += 1
+        print(f"{count} messages in this channel")
+        await delete_me_1.delete()
+        await message.channel.send(f"{count} messages in this channel.")
+    elif re.search("Delete and post all links", channel_url):
+        print(f"Delete support coming soon!")
+    else:
+        print(f"""Link not supported or wrong channel.
+        Link was posted inside channel {message.channel.name}""")
+        
 
 bot.run(token)
