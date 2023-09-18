@@ -15,3 +15,4 @@ This bot works on discord but will have future standalone versions. It converts 
 * Create webtool
 * Create Offline Version with UI
 * Create more bots for other apps that would do a simular job.
+* Create website to interace with bot.
