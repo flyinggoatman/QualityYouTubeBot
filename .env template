@@ -10,3 +10,4 @@ SQL_TABLE=
 OPEN_AI=
 AI_ON=False
 DEBUG_MODE=False
+processing_message=True

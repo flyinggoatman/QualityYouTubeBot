@@ -70,7 +70,7 @@ def channel_pull(channel_url, DEBUG_MODE):
     channel_id = c.channel_id
     channel_id_link = f"https://youtube.com/channel/{channel_id}"
     url = c.about_url
-    channel_about = about_pull(c, DEBUG_MODE)
+    # channel_about = about_pull(c, DEBUG_MODE)
 
     if DEBUG_MODE:
         if re.search("UCMDQxm7cUx3yXkfeHa5zJIQ", channel_id_link):
@@ -80,7 +80,7 @@ def channel_pull(channel_url, DEBUG_MODE):
         print(f"Channel Link: {channel_id_link}")
         if re.search("UCMDQxm7cUx3yXkfeHa5zJIQ", channel_id_link):
             print(f"#################################")
-    return channel_name, channel_id_link, channel_about, channel_id
+    return channel_name, channel_id_link, channel_id
 
 def video_pull(channel_url, DEBUG_MODE):
     YTV = YouTube(channel_url)
@@ -92,13 +92,13 @@ def video_pull(channel_url, DEBUG_MODE):
     channel_id = c.channel_id
     channel_html = c._about_html
 
-    channel_about = about_pull(c, DEBUG_MODE)
+    # channel_about = about_pull(c, DEBUG_MODE)
 
     if DEBUG_MODE:
         print(f"Channel ID: {channel_id}")
         print(f"Channel Name: {channel_name}")
         print(f"channel Link: {channel_id_link}")
-    return channel_name, channel_id_link, channel_about, channel_id
+    return channel_name, channel_id_link, channel_id
 
 def env_pull(DEBUG_MODE):
     TOKEN = config('TOKEN') or ''
@@ -114,6 +114,7 @@ def env_pull(DEBUG_MODE):
     AI_ON = config('AI_ON', cast=bool) or 'False'
     DEBUG_MODE = config('DEBUG_MODE', cast=bool) or 'False'
     SQL_port_String = str(SQL_PORT)
+    processing_message = config('processing_message', cast=bool) or 'False'
     if DEBUG_MODE:
         print()  
         print(f'discord_token: {TOKEN}')
@@ -129,65 +130,66 @@ def env_pull(DEBUG_MODE):
         print(f'opem_AI_support: {AI_ON}')
         print(f'debug_mode: {DEBUG_MODE}')
         print()
-    return TOKEN, PREFIX, DISCORD_CHANNEL, SQL_HOST, SQL_USER, SQL_PORT, SQL_DATABASE, SQL_PASS, SQL_TABLE, OPEN_AI, SQL_port_String, AI_ON, DEBUG_MODE
+        print(f'processing_message: {processing_message}')
+    return TOKEN, PREFIX, DISCORD_CHANNEL, SQL_HOST, SQL_USER, SQL_PORT, SQL_DATABASE, SQL_PASS, SQL_TABLE, OPEN_AI, SQL_port_String, AI_ON, DEBUG_MODE, processing_message
 
-def about_pull(c, DEBUG_MODE):
-    url = c.about_url
+# def about_pull(c, DEBUG_MODE):
+#     url = c.about_url
 
-    response = requests.get(
-        url, cookies={'CONSENT':'YES+42'})
+#     response = requests.get(
+#         url, cookies={'CONSENT':'YES+42'})
 
-    text = response.text
+#     text = response.text
 
-    pattern = r'itemprop="description"\s+content="([^"]+)"'
+#     pattern = r'itemprop="description"\s+content="([^"]+)"'
 
-    match = re.search(pattern, text)
-    if match:
-        content = match.group(1)
-        channel_about = html.unescape(content)
-        return channel_about
-    else:
-        if DEBUG_MODE:
-            print(f"No match found.")
-        return
+#     match = re.search(pattern, text)
+#     if match:
+#         content = match.group(1)
+#         channel_about = html.unescape(content)
+#         return channel_about
+#     else:
+#         if DEBUG_MODE:
+#             print(f"No match found.")
+#         return
 
-def read_prompt_from_file(file_path):
-    try:
-        with open(file_path, "r") as file:
-            return file.read().strip()
-    except FileNotFoundError:
-        print(f"Error: The file {file_path} was not found.")
-        return "You are a helpful assistant."  # Fallback prompt in case the file is not found
+# def read_prompt_from_file(file_path):
+#     try:
+#         with open(file_path, "r") as file:
+#             return file.read().strip()
+#     except FileNotFoundError:
+#         print(f"Error: The file {file_path} was not found.")
+#         return "You are a helpful assistant."  # Fallback prompt in case the file is not found
 
-async def open_ai_func(OPENAI_API_KEY, channel_about, AI_ON, channel_name, message):
-    if not AI_ON:
-        channel_description = "OPEN AI SUPPORT COMING SOON!"
-        await message.channel.send(channel_description, delete_after=10)
-        return channel_description
+# async def open_ai_func(OPENAI_API_KEY, channel_about, AI_ON, channel_name, message):
+#     if not AI_ON:
+#         channel_description = "OPEN AI SUPPORT COMING SOON!"
+#         await message.channel.send(channel_description, delete_after=10)
+#         return channel_description
 
-    openai.api_key = OPENAI_API_KEY
+#     openai.api_key = OPENAI_API_KEY
 
-    try:
-        # Read the system prompt from the file
-        system_prompt = read_prompt_from_file("AI_PROMPT.txt")
+#     try:
+#         # Read the system prompt from the file
+#         system_prompt = read_prompt_from_file("AI_PROMPT.txt")
 
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": f"Summarize the following YouTube channel description in one sentence: {channel_about}"}
-            ],
-            temperature=0.7,
-            max_tokens=60,
-            top_p=1.0,
-            frequency_penalty=0.0,
-            presence_penalty=0.0,
-        )
-        channel_description = response.choices[0].message['content'].strip()
-        await message.channel.send(channel_description, delete_after=10)  # Send the generated description directly
-    except Exception as e:
-        print(f"Error with OpenAI call: {e}")
-        await message.channel.send("Failed to generate description.", delete_after=10)
-        channel_description = None
+#         response = openai.ChatCompletion.create(
+#             model="gpt-4",
+#             messages=[
+#                 {"role": "system", "content": system_prompt},
+#                 {"role": "user", "content": f"Summarize the following YouTube channel description in one sentence: {channel_about}"}
+#             ],
+#             temperature=0.7,
+#             max_tokens=60,
+#             top_p=1.0,
+#             frequency_penalty=0.0,
+#             presence_penalty=0.0,
+#         )
+#         channel_description = response.choices[0].message['content'].strip()
+#         await message.channel.send(channel_description, delete_after=10)  # Send the generated description directly
+#     except Exception as e:
+#         print(f"Error with OpenAI call: {e}")
+#         print("Failed to generate channel description.")
+#         channel_description = None
 
-    return channel_description
+#     return channel_description
