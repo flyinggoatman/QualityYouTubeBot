@@ -15,3 +15,22 @@ test.py
 imgur.txt
 QualityYouTubeBot.bat
 QualityYouTubeBot.vbs
+discord_test.py
+.gitignore
+allowed_channels.pkl
+anything.bat
+banner.png
+channels.py
+channels.txt
+error.log
+index.htm
+listchannels.py
+open_AI_API_test.py
+openai1.py
+pytube version.py
+pytube2.py
+quality.bat
+qualityyoutube.zip
+__pycache__/openai.cpython-310.pyc
+__pycache__/openai1.cpython-310.pyc
+__pycache__/pytube.cpython-310.pyc
