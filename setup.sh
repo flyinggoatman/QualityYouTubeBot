@@ -44,6 +44,7 @@ echo
 echo "To run the bot:"
 echo "1. Make sure your .env file is configured correctly"
 echo "2. Run './run.sh' or 'python3 QualityYouTubeBot.py'"
+echo "2.1.if you want the bot to run on boot then put  run.bat in startup folder on windows."
 echo
 
 # Make run.sh executable
