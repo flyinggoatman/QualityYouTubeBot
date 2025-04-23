@@ -13,6 +13,7 @@ import datetime
 import asyncio
 import colorama
 from colorama import Fore
+import json
 
 Base = declarative_base()
 
@@ -66,7 +67,15 @@ async def delete_channel(channel_id):
             return False
 
 def channel_pull(channel_url, DEBUG_MODE):
+    """Extract channel information from a channel URL."""
     try:
+        # Check if it's a video URL (watch?v=) - redirect to video_pull
+        if re.search(r"youtube\.com/watch\?v=|youtu\.be/", channel_url):
+            if DEBUG_MODE:
+                print(f"{Fore.YELLOW}Detected watch URL, redirecting to video_pull: {channel_url}")
+            return video_pull(channel_url, DEBUG_MODE)
+        
+        # Try the standard pytube Channel method
         c = Channel(channel_url)
         channel_name = c.channel_name
         channel_id = c.channel_id
@@ -74,22 +83,81 @@ def channel_pull(channel_url, DEBUG_MODE):
     except Exception as e:
         if DEBUG_MODE:
             print(f"{Fore.RED}Error in channel_pull: {e}")
-        # Try an alternative extraction method
-        if '@' in channel_url:
+        
+        # Enhanced alternative extraction methods
+        try:
             # Handle @username type URLs
-            username = channel_url.split('@')[-1].split('/')[0].split('?')[0]
-            channel_id = f"@{username}"
-            channel_id_link = f"https://youtube.com/{channel_id}"
-            channel_name = username  # Use username as fallback name
-        else:
-            # Extract channel ID using regex if possible
+            if '@' in channel_url:
+                username = channel_url.split('@')[-1].split('/')[0].split('?')[0]
+                channel_id = f"@{username}"
+                channel_id_link = f"https://youtube.com/{channel_id}"
+                
+                # Try to get a better channel name by fetching the page
+                try:
+                    headers = {"User-Agent": "Mozilla/5.0"}
+                    response = requests.get(channel_id_link, headers=headers)
+                    html_content = response.text
+                    
+                    # Try to extract channel name from HTML
+                    channel_name_match = re.search(r'<meta name="title" content="([^"]+)"', html_content) or \
+                                         re.search(r'<meta property="og:title" content="([^"]+)"', html_content)
+                    if channel_name_match:
+                        channel_name = html.unescape(channel_name_match.group(1))
+                    else:
+                        channel_name = username  # Use username as fallback name
+                except Exception:
+                    channel_name = username  # Use username as fallback name
+                
+                return channel_name, channel_id_link, channel_id
+            
+            # Extract channel ID using improved regex
             channel_match = re.search(r"(?:\/channel\/|\/c\/|\/user\/)([^\/\?]+)", channel_url)
             if channel_match:
                 channel_id = channel_match.group(1)
                 channel_id_link = f"https://youtube.com/channel/{channel_id}"
-                channel_name = channel_id  # Use ID as fallback name
-            else:
-                raise ValueError(f"Could not parse channel information from URL: {channel_url}")
+                
+                # Try to get a better channel name by fetching the page
+                try:
+                    headers = {"User-Agent": "Mozilla/5.0"}
+                    response = requests.get(channel_id_link, headers=headers)
+                    html_content = response.text
+                    
+                    # Try to extract channel name from HTML
+                    channel_name_match = re.search(r'<meta name="title" content="([^"]+)"', html_content) or \
+                                         re.search(r'<meta property="og:title" content="([^"]+)"', html_content)
+                    if channel_name_match:
+                        channel_name = html.unescape(channel_name_match.group(1))
+                    else:
+                        channel_name = f"Channel {channel_id}"  # Use ID as fallback name
+                except Exception:
+                    channel_name = f"Channel {channel_id}"  # Use ID as fallback name
+                
+                return channel_name, channel_id_link, channel_id
+            
+            # Check once more for video URLs and redirect to video_pull
+            if "youtube.com/watch" in channel_url or "youtu.be/" in channel_url:
+                if DEBUG_MODE:
+                    print(f"{Fore.YELLOW}Detected watch URL in fallback, redirecting to video_pull: {channel_url}")
+                return video_pull(channel_url, DEBUG_MODE)
+            
+            # If we get here, we couldn't extract channel info with any method
+            raise ValueError(f"Could not parse channel information from URL: {channel_url}")
+            
+        except Exception as nested_e:
+            if DEBUG_MODE:
+                print(f"{Fore.RED}Error in channel_pull alternative method: {nested_e}")
+            
+            # One final attempt - if it's a video URL, try video_pull
+            if "youtube.com/watch" in channel_url or "youtu.be/" in channel_url:
+                if DEBUG_MODE:
+                    print(f"{Fore.YELLOW}Last resort attempt with video_pull: {channel_url}")
+                try:
+                    return video_pull(channel_url, DEBUG_MODE)
+                except Exception as video_e:
+                    if DEBUG_MODE:
+                        print(f"{Fore.RED}Last resort video_pull also failed: {video_e}")
+            
+            raise ValueError(f"Could not extract channel information from URL: {channel_url}")
 
     if DEBUG_MODE:
         if re.search("UCMDQxm7cUx3yXkfeHa5zJIQ", channel_id_link):
@@ -103,52 +171,113 @@ def channel_pull(channel_url, DEBUG_MODE):
     return channel_name, channel_id_link, channel_id
 
 def video_pull(channel_url, DEBUG_MODE):
-    try:
-        # First attempt: Use pytube
-        YTV = YouTube(channel_url)
-        channel_id = YTV.channel_id
-        channel_id_link = YTV.channel_url
+    """Extract channel information from a video URL."""
+    if DEBUG_MODE:
+        print(f"{Fore.CYAN}Video pull called with URL: {channel_url}")
         
-        c = Channel(channel_id_link)
-        channel_name = c.channel_name
-        channel_id = c.channel_id
+    try:
+        # Extract video ID first - this should work for both youtube.com/watch?v= and youtu.be/ URLs
+        video_id_match = re.search(r"(?:v=|\/)([0-9A-Za-z_-]{11}).*", channel_url)
+        if not video_id_match:
+            raise ValueError(f"Could not extract video ID from URL: {channel_url}")
+        
+        video_id = video_id_match.group(1)
+        watch_url = f"https://www.youtube.com/watch?v={video_id}"
+        
+        if DEBUG_MODE:
+            print(f"{Fore.CYAN}Extracted video ID: {video_id}, watch URL: {watch_url}")
+        
+        # First attempt: Use pytube
+        try:
+            YTV = YouTube(watch_url)
+            channel_id = YTV.channel_id
+            if channel_id:
+                channel_id_link = YTV.channel_url
+                channel_name = YTV.author or "Unknown Channel"
+                
+                if DEBUG_MODE:
+                    print(f"{Fore.GREEN}Successfully extracted channel info using pytube: ID={channel_id}, Name={channel_name}")
+                
+                return channel_name, channel_id_link, channel_id
+        except Exception as pytube_error:
+            if DEBUG_MODE:
+                print(f"{Fore.RED}Pytube extraction failed: {pytube_error}")
+        
+        # Second attempt: Direct HTML scraping
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            "Accept-Language": "en-US,en;q=0.9"
+        }
+        response = requests.get(watch_url, headers=headers)
+        html_content = response.text
+        
+        if DEBUG_MODE:
+            print(f"{Fore.CYAN}HTML request status code: {response.status_code}")
+        
+        # Try multiple patterns to extract channel ID
+        channel_id_patterns = [
+            r'"channelId":"([^"]+)"',
+            r'<meta itemprop="channelId" content="([^"]+)"',
+            r'"externalChannelId":"([^"]+)"',
+            r'<link itemprop="url" href="https://www.youtube.com/channel/([^"]+)"'
+        ]
+        
+        channel_id = None
+        for pattern in channel_id_patterns:
+            match = re.search(pattern, html_content)
+            if match:
+                channel_id = match.group(1)
+                if DEBUG_MODE:
+                    print(f"{Fore.GREEN}Found channel ID with pattern: {pattern}")
+                break
+                
+        if not channel_id:
+            # Try to extract from initial data JSON
+            try:
+                initial_data_match = re.search(r'ytInitialData\s*=\s*({.+?});', html_content, re.DOTALL)
+                if initial_data_match:
+                    json_str = initial_data_match.group(1)
+                    data = json.loads(json_str)
+                    channel_id = data.get('contents', {}).get('twoColumnWatchNextResults', {}).get('results', {}).get('results', {}).get('contents', [{}])[0].get('videoPrimaryInfoRenderer', {}).get('owner', {}).get('videoOwnerRenderer', {}).get('navigationEndpoint', {}).get('browseEndpoint', {}).get('browseId')
+                    if DEBUG_MODE and channel_id:
+                        print(f"{Fore.GREEN}Found channel ID in ytInitialData: {channel_id}")
+            except Exception as json_error:
+                if DEBUG_MODE:
+                    print(f"{Fore.RED}JSON extraction error: {json_error}")
+        
+        if not channel_id:
+            raise ValueError(f"Could not extract channel ID from video page: {watch_url}")
+                
+        channel_id_link = f"https://youtube.com/channel/{channel_id}"
+        
+        # Try multiple patterns to extract channel name
+        channel_name_patterns = [
+            r'"ownerChannelName":"([^"]+)"',
+            r'"author":"([^"]+)"',
+            r'<span itemprop="author".*?<link itemprop="name" content="([^"]+)"',
+            r'<link rel="canonical" href="https://www.youtube.com/channel/[^"]+"><link rel="alternate" href="android-app://com.google.android.youtube/http/www.youtube.com/channel/[^"]+"><link rel="alternate" href="ios-app://544007664/http/www.youtube.com/channel/[^"]+"><title>([^<]+)',
+            r'<meta name="title" content="([^"]+)"'
+        ]
+        
+        channel_name = None
+        for pattern in channel_name_patterns:
+            match = re.search(pattern, html_content)
+            if match:
+                channel_name = html.unescape(match.group(1))
+                if DEBUG_MODE:
+                    print(f"{Fore.GREEN}Found channel name with pattern: {pattern}")
+                break
+            
+        # If no name found, use a fallback
+        if not channel_name:
+            channel_name = f"Channel {channel_id}"
+            if DEBUG_MODE:
+                print(f"{Fore.YELLOW}Using fallback channel name: {channel_name}")
+                
     except Exception as e:
         if DEBUG_MODE:
-            print(f"{Fore.RED}Error in video_pull using pytube: {e}")
-            
-        # Second attempt: Extract video ID and fetch channel info via direct HTML scraping
-        try:
-            video_id_match = re.search(r"(?:v=|\/)([0-9A-Za-z_-]{11}).*", channel_url)
-            if not video_id_match:
-                raise ValueError(f"Could not extract video ID from URL: {channel_url}")
-            
-            video_id = video_id_match.group(1)
-            watch_url = f"https://www.youtube.com/watch?v={video_id}"
-            
-            # Get the HTML of the watch page
-            headers = {"User-Agent": "Mozilla/5.0"}
-            response = requests.get(watch_url, headers=headers)
-            html_content = response.text
-            
-            # Try to extract channel ID from HTML
-            channel_id_match = re.search(r'"channelId":"([^"]+)"', html_content)
-            if not channel_id_match:
-                raise ValueError(f"Could not extract channel ID from video page: {watch_url}")
-                
-            channel_id = channel_id_match.group(1)
-            channel_id_link = f"https://youtube.com/channel/{channel_id}"
-            
-            # Try to extract channel name from HTML
-            channel_name_match = re.search(r'"ownerChannelName":"([^"]+)"', html_content) or re.search(r'"author":"([^"]+)"', html_content)
-            if channel_name_match:
-                channel_name = html.unescape(channel_name_match.group(1))
-            else:
-                channel_name = f"Channel {channel_id}"  # Fallback name
-                
-        except Exception as nested_e:
-            if DEBUG_MODE:
-                print(f"{Fore.RED}Error in video_pull fallback method: {nested_e}")
-            raise ValueError(f"Could not extract channel information from video URL: {channel_url}")
+            print(f"{Fore.RED}Error in video_pull fallback method: {e}")
+        raise ValueError(f"Could not extract channel information from video URL: {channel_url}. Error: {e}")
 
     if DEBUG_MODE:
         print(f"{Fore.YELLOW}Channel ID: {channel_id}")
@@ -158,6 +287,7 @@ def video_pull(channel_url, DEBUG_MODE):
     return channel_name, channel_id_link, channel_id
 
 def env_pull(DEBUG_MODE):
+    """Extract environment variables for configuration."""
     TOKEN = config('TOKEN') or ''
     PREFIX = config('PREFIX') or ''
     DISCORD_CHANNEL = config('DISCORD_CHANNEL', default='938207947878703187') or ''
@@ -189,7 +319,6 @@ def env_pull(DEBUG_MODE):
         print()
         print(f'{Fore.CYAN}processing_message: {processing_message}')
     return TOKEN, PREFIX, DISCORD_CHANNEL, SQL_HOST, SQL_USER, SQL_PORT, SQL_DATABASE, SQL_PASS, SQL_TABLE, OPEN_AI, SQL_port_String, AI_ON, DEBUG_MODE, processing_message
-
 # Function to extract About information - left commented out as in original
 # def about_pull(c, DEBUG_MODE):
 #     url = c.about_url
@@ -204,7 +333,7 @@ def env_pull(DEBUG_MODE):
 #     match = re.search(pattern, text)
 #     if match:
 #         content = match.group(1)
-#         channel_about = html.unescape(content)
+#         channel_about = html.unescape(content)a
 #         return channel_about
 #     else:
 #         if DEBUG_MODE:

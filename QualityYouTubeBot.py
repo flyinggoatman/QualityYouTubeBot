@@ -209,7 +209,7 @@ async def on_message(message):
             try:
                 channel_name, channel_id_link, channel_id = (
                     channel_pull(channel_url_to_delete, DEBUG_MODE) 
-                    if re.search("/channel/|@|/user/|/c/|(?<!youtu.)com/watch", channel_url_to_delete) 
+                    if re.search("/channel/|@|/user/|/c/|youtube\.com/watch|youtu\.be/", channel_url_to_delete)
                     else video_pull(channel_url_to_delete, DEBUG_MODE)
                 )
             except Exception as e:
@@ -247,7 +247,7 @@ async def on_message(message):
             try:
                 channel_name, channel_id_link, channel_id = (
                     channel_pull(channel_url, DEBUG_MODE) 
-                    if re.search("/channel/|@|/user/|/c/|(?<!youtu.)com/watch", channel_url) 
+                    if re.search("/channel/|@|/user/|/c/|youtube\.com/watch|youtu\.be/", channel_url) 
                     else video_pull(channel_url, DEBUG_MODE)
                 )
                 
@@ -301,103 +301,18 @@ async def on_message(message):
             print(f"{Fore.RED}Link not supported or wrong channel. Link was posted inside channel {message.channel.name}")
 
     
-   except AttributeError as e:
-        print(f"{Fore.RED}There has been an AttributeError at {current_time}.")
-        print(f"{Fore.RED}Error details: {e}")
-        print(f"{Fore.RED}Problem URL: {channel_url}")
-        print(f"{Fore.RED}This typically happens when YouTube returns unexpected data structure.")
+    except AttributeError as e:
+        print(f"{Fore.RED}There has been an error at {current_time}.")
+        print(f"{Fore.RED}{e}")
+        print(f"{Fore.RED}{channel_url}")
         logger.error(f"AttributeError: {e}, URL: {channel_url}")
-        await message.channel.send(f"There has been an error processing your request. The link format might be invalid or YouTube has changed something. Please try again with a different link format.", delete_after=num10)
-    
-    except urllib.error.HTTPError as e:
-        print(f"{Fore.RED}HTTP Error occurred at {current_time}: {e.code} {e.reason}")
-        print(f"{Fore.RED}Problem URL: {channel_url}")
-        logger.error(f"HTTP Error {e.code}: {e.reason}, URL: {channel_url}")
-        
-        if e.code == 400:
-            await message.channel.send(f"YouTube rejected our request (400 Bad Request). This typically happens when YouTube has changed their API. Please try a different link format.", delete_after=num10)
-        elif e.code == 404:
-            await message.channel.send(f"The YouTube content could not be found (404). The video or channel might have been deleted or made private.", delete_after=num10)
-        elif e.code == 429:
-            await message.channel.send(f"We've been rate limited by YouTube (429). Please try again in a few minutes.", delete_after=num10)
-        elif e.code >= 500:
-            await message.channel.send(f"YouTube is experiencing issues (Server Error {e.code}). Please try again later.", delete_after=num10)
-        else:
-            await message.channel.send(f"HTTP Error ({e.code}) when accessing YouTube. Please try again later.", delete_after=num10)
-    
-    except urllib.error.URLError as e:
-        print(f"{Fore.RED}URL Error occurred at {current_time}: {e.reason}")
-        print(f"{Fore.RED}Problem URL: {channel_url}")
-        logger.error(f"URL Error: {e.reason}, URL: {channel_url}")
-        await message.channel.send(f"Network error when connecting to YouTube. Please check your internet connection and try again.", delete_after=num10)
-    
-    except pytube.exceptions.RegexMatchError as e:
-        print(f"{Fore.RED}YouTube RegexMatchError at {current_time}: {e}")
-        print(f"{Fore.RED}Problem URL: {channel_url}")
-        logger.error(f"RegexMatchError: {e}, URL: {channel_url}")
-        await message.channel.send(f"Could not parse the YouTube link. This usually means the URL format is not recognized. Please try with a standard YouTube URL.", delete_after=num10)
-    
-    except pytube.exceptions.ExtractError as e:
-        print(f"{Fore.RED}YouTube ExtractError at {current_time}: {e}")
-        print(f"{Fore.RED}Problem URL: {channel_url}")
-        logger.error(f"ExtractError: {e}, URL: {channel_url}")
-        await message.channel.send(f"Could not extract information from the YouTube link. YouTube might have changed something. Please try a different format of the same link.", delete_after=num10)
-    
-    except pytube.exceptions.VideoUnavailable as e:
-        print(f"{Fore.RED}YouTube VideoUnavailable at {current_time}: {e}")
-        print(f"{Fore.RED}Problem URL: {channel_url}")
-        logger.error(f"VideoUnavailable: {e}, URL: {channel_url}")
-        await message.channel.send(f"This video is unavailable. It might be private, age-restricted, or deleted.", delete_after=num10)
-    
-    except json.JSONDecodeError as e:
-        print(f"{Fore.RED}JSON Decode Error at {current_time}: {e}")
-        print(f"{Fore.RED}Problem URL: {channel_url}")
-        logger.error(f"JSONDecodeError: {e}, URL: {channel_url}")
-        await message.channel.send(f"Failed to process YouTube's response. This might be a temporary issue. Please try again later.", delete_after=num10)
-    
-    except requests.exceptions.RequestException as e:
-        print(f"{Fore.RED}Request Exception at {current_time}: {e}")
-        print(f"{Fore.RED}Problem URL: {channel_url}")
-        logger.error(f"RequestException: {e}, URL: {channel_url}")
-        await message.channel.send(f"Network error when making a request to YouTube. Please check your connection and try again.", delete_after=num10)
-    
-    except asyncio.TimeoutError:
-        print(f"{Fore.RED}Async Timeout at {current_time}")
-        print(f"{Fore.RED}Problem URL: {channel_url}")
-        logger.error(f"TimeoutError, URL: {channel_url}")
-        await message.channel.send(f"The operation timed out. YouTube might be slow or unresponsive. Please try again later.", delete_after=num10)
-    
-    except discord.errors.Forbidden as e:
-        print(f"{Fore.RED}Discord Permission Error at {current_time}: {e}")
-        logger.error(f"Discord Forbidden Error: {e}")
-        # Don't try to send a message as we likely don't have permission
-        print(f"{Fore.RED}Bot doesn't have permission to send messages in this channel.")
-    
-    except KeyError as e:
-        print(f"{Fore.RED}KeyError at {current_time}: {e}")
-        print(f"{Fore.RED}Problem URL: {channel_url}")
-        print(f"{Fore.RED}This typically happens when expected data is missing from YouTube's response.")
-        logger.error(f"KeyError: {e}, URL: {channel_url}")
-        await message.channel.send(f"Failed to find expected information in YouTube's response. YouTube may have changed their data format. Please try a different link.", delete_after=num10)
+        await message.channel.send(f"There has been an error. Please try the same link again.", delete_after=num10)
     
     except Exception as e:
         print(f"{Fore.RED}Unexpected error at {current_time}: {e}")
-        print(f"{Fore.RED}Error type: {type(e).__name__}")
         print(f"{Fore.RED}URL: {channel_url}")
-        print(f"{Fore.RED}Full error details:", exc_info=True)
-        logger.error(f"Unexpected error: {e}", exc_info=True)
-        
-        # Give more detailed feedback about the general error
-        error_msg = f"An unexpected error occurred: {type(e).__name__}. "
-        error_msg += "This has been logged for investigation. "
-        error_msg += "Please try again later or use a different link format."
-        
-        await message.channel.send(error_msg, delete_after=num10)
-        
-        if delete_me_1:
-            try:
-                await delete_me_1.delete()
-            except discord.errors.NotFound:
-                pass
+        logger.error(f"Unexpected error: {e}, URL: {channel_url}")
+        await message.channel.send(f"An unexpected error occurred. Please try again later.", delete_after=num10)
+
 # Start the bot
 bot.run(token)
