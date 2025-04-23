@@ -284,15 +284,29 @@ async def on_message(message):
             except discord.errors.NotFound:
                 pass
             count = 0
-            async for _ in message.channel.history(limit=None):
-                count += 1
+            async for msg in message.channel.history(limit=None):
+                if msg.content.startswith("http://") or msg.content.startswith("https://"):
+                    count += 1
             print(f"{Fore.CYAN}{count} messages in this channel")
             if delete_me_1:
                 try:
                     await delete_me_1.delete()
                 except discord.errors.NotFound:
                     pass
-            await message.channel.send(f"{Fore.YELLOW}{count} messages in this channel.", delete_after=num10)
+            # Ask user to type !d if they want to delete this message
+            await message.channel.send(f"{count} messages in this channel. Type !d to delete this message.", delete_after=num10)
+            #make it delete the message if it sees !d in the channel but do not need a link, just !d and should only delete last message and itself.
+            if re.search("!d", channel_url):
+                async for msg in message.channel.history(limit=1):
+                    if msg.id == message.id:
+                        try:
+                            await msg.delete()
+                        except discord.errors.NotFound:
+                            pass
+                
+        
+            
+            
         
         elif re.search("Delete and post all links", channel_url):
             print(f"{Fore.YELLOW}Delete support coming soon!")
