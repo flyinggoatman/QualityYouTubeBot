@@ -11,7 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 import datetime
 import asyncio
-import openai
+import colorama
+from colorama import Fore
 
 Base = declarative_base()
 
@@ -65,39 +66,95 @@ async def delete_channel(channel_id):
             return False
 
 def channel_pull(channel_url, DEBUG_MODE):
-    c = Channel(channel_url)
-    channel_name = c.channel_name
-    channel_id = c.channel_id
-    channel_id_link = f"https://youtube.com/channel/{channel_id}"
-    url = c.about_url
-    # channel_about = about_pull(c, DEBUG_MODE)
+    try:
+        c = Channel(channel_url)
+        channel_name = c.channel_name
+        channel_id = c.channel_id
+        channel_id_link = f"https://youtube.com/channel/{channel_id}"
+    except Exception as e:
+        if DEBUG_MODE:
+            print(f"{Fore.RED}Error in channel_pull: {e}")
+        # Try an alternative extraction method
+        if '@' in channel_url:
+            # Handle @username type URLs
+            username = channel_url.split('@')[-1].split('/')[0].split('?')[0]
+            channel_id = f"@{username}"
+            channel_id_link = f"https://youtube.com/{channel_id}"
+            channel_name = username  # Use username as fallback name
+        else:
+            # Extract channel ID using regex if possible
+            channel_match = re.search(r"(?:\/channel\/|\/c\/|\/user\/)([^\/\?]+)", channel_url)
+            if channel_match:
+                channel_id = channel_match.group(1)
+                channel_id_link = f"https://youtube.com/channel/{channel_id}"
+                channel_name = channel_id  # Use ID as fallback name
+            else:
+                raise ValueError(f"Could not parse channel information from URL: {channel_url}")
 
     if DEBUG_MODE:
         if re.search("UCMDQxm7cUx3yXkfeHa5zJIQ", channel_id_link):
-            print(f"######## Blocked Channel ########")
-        print(f"Channel Name: {channel_name}")
-        print(f"Channel ID: {channel_id}")
-        print(f"Channel Link: {channel_id_link}")
+            print(f"{Fore.RED}######## Blocked Channel ########")
+        print(f"{Fore.YELLOW}Channel Name: {channel_name}")
+        print(f"{Fore.WHITE}Channel ID: {channel_id}")
+        print(f"{Fore.WHITE}Channel Link: {channel_id_link}")
         if re.search("UCMDQxm7cUx3yXkfeHa5zJIQ", channel_id_link):
-            print(f"#################################")
+            print(f"{Fore.RED}#################################")
+            
     return channel_name, channel_id_link, channel_id
 
 def video_pull(channel_url, DEBUG_MODE):
-    YTV = YouTube(channel_url)
-    channel_id = YTV.channel_id
-    channel_id_link = YTV.channel_url
-
-    c = Channel(channel_id_link)
-    channel_name = c.channel_name
-    channel_id = c.channel_id
-    channel_html = c._about_html
-
-    # channel_about = about_pull(c, DEBUG_MODE)
+    try:
+        # First attempt: Use pytube
+        YTV = YouTube(channel_url)
+        channel_id = YTV.channel_id
+        channel_id_link = YTV.channel_url
+        
+        c = Channel(channel_id_link)
+        channel_name = c.channel_name
+        channel_id = c.channel_id
+    except Exception as e:
+        if DEBUG_MODE:
+            print(f"{Fore.RED}Error in video_pull using pytube: {e}")
+            
+        # Second attempt: Extract video ID and fetch channel info via direct HTML scraping
+        try:
+            video_id_match = re.search(r"(?:v=|\/)([0-9A-Za-z_-]{11}).*", channel_url)
+            if not video_id_match:
+                raise ValueError(f"Could not extract video ID from URL: {channel_url}")
+            
+            video_id = video_id_match.group(1)
+            watch_url = f"https://www.youtube.com/watch?v={video_id}"
+            
+            # Get the HTML of the watch page
+            headers = {"User-Agent": "Mozilla/5.0"}
+            response = requests.get(watch_url, headers=headers)
+            html_content = response.text
+            
+            # Try to extract channel ID from HTML
+            channel_id_match = re.search(r'"channelId":"([^"]+)"', html_content)
+            if not channel_id_match:
+                raise ValueError(f"Could not extract channel ID from video page: {watch_url}")
+                
+            channel_id = channel_id_match.group(1)
+            channel_id_link = f"https://youtube.com/channel/{channel_id}"
+            
+            # Try to extract channel name from HTML
+            channel_name_match = re.search(r'"ownerChannelName":"([^"]+)"', html_content) or re.search(r'"author":"([^"]+)"', html_content)
+            if channel_name_match:
+                channel_name = html.unescape(channel_name_match.group(1))
+            else:
+                channel_name = f"Channel {channel_id}"  # Fallback name
+                
+        except Exception as nested_e:
+            if DEBUG_MODE:
+                print(f"{Fore.RED}Error in video_pull fallback method: {nested_e}")
+            raise ValueError(f"Could not extract channel information from video URL: {channel_url}")
 
     if DEBUG_MODE:
-        print(f"Channel ID: {channel_id}")
-        print(f"Channel Name: {channel_name}")
-        print(f"channel Link: {channel_id_link}")
+        print(f"{Fore.YELLOW}Channel ID: {channel_id}")
+        print(f"{Fore.WHITE}Channel Name: {channel_name}")
+        print(f"{Fore.WHITE}Channel Link: {channel_id_link}")
+        
     return channel_name, channel_id_link, channel_id
 
 def env_pull(DEBUG_MODE):
@@ -117,32 +174,33 @@ def env_pull(DEBUG_MODE):
     processing_message = config('processing_message', cast=bool) or 'False'
     if DEBUG_MODE:
         print()  
-        print(f'discord_token: {TOKEN}')
-        print(f'open_AI_token: {OPEN_AI}')
-        print(f'prefix:  {PREFIX}')
-        print(f'sql_host: {SQL_HOST}')
-        print(f'sql_user: {SQL_USER}')
-        print(f'sq_pass:  {SQL_PASS}')
-        print(f'sql_port: {SQL_PORT}')
-        print(f'sql_database: {SQL_DATABASE}')
-        print(f'sql_table: {SQL_TABLE}')
+        print(f'{Fore.CYAN}discord_token: {TOKEN}')
+        print(f'{Fore.CYAN}open_AI_token: {OPEN_AI}')
+        print(f'{Fore.CYAN}prefix:  {PREFIX}')
+        print(f'{Fore.CYAN}sql_host: {SQL_HOST}')
+        print(f'{Fore.CYAN}sql_user: {SQL_USER}')
+        print(f'{Fore.CYAN}sq_pass:  {SQL_PASS}')
+        print(f'{Fore.CYAN}sql_port: {SQL_PORT}')
+        print(f'{Fore.CYAN}sql_database: {SQL_DATABASE}')
+        print(f'{Fore.CYAN}sql_table: {SQL_TABLE}')
         print()
-        print(f'opem_AI_support: {AI_ON}')
-        print(f'debug_mode: {DEBUG_MODE}')
+        print(f'{Fore.CYAN}opem_AI_support: {AI_ON}')
+        print(f'{Fore.CYAN}debug_mode: {DEBUG_MODE}')
         print()
-        print(f'processing_message: {processing_message}')
+        print(f'{Fore.CYAN}processing_message: {processing_message}')
     return TOKEN, PREFIX, DISCORD_CHANNEL, SQL_HOST, SQL_USER, SQL_PORT, SQL_DATABASE, SQL_PASS, SQL_TABLE, OPEN_AI, SQL_port_String, AI_ON, DEBUG_MODE, processing_message
 
+# Function to extract About information - left commented out as in original
 # def about_pull(c, DEBUG_MODE):
 #     url = c.about_url
-
+#
 #     response = requests.get(
 #         url, cookies={'CONSENT':'YES+42'})
-
+#
 #     text = response.text
-
+#
 #     pattern = r'itemprop="description"\s+content="([^"]+)"'
-
+#
 #     match = re.search(pattern, text)
 #     if match:
 #         content = match.group(1)
@@ -152,44 +210,3 @@ def env_pull(DEBUG_MODE):
 #         if DEBUG_MODE:
 #             print(f"No match found.")
 #         return
-
-# def read_prompt_from_file(file_path):
-#     try:
-#         with open(file_path, "r") as file:
-#             return file.read().strip()
-#     except FileNotFoundError:
-#         print(f"Error: The file {file_path} was not found.")
-#         return "You are a helpful assistant."  # Fallback prompt in case the file is not found
-
-# async def open_ai_func(OPENAI_API_KEY, channel_about, AI_ON, channel_name, message):
-#     if not AI_ON:
-#         channel_description = "OPEN AI SUPPORT COMING SOON!"
-#         await message.channel.send(channel_description, delete_after=10)
-#         return channel_description
-
-#     openai.api_key = OPENAI_API_KEY
-
-#     try:
-#         # Read the system prompt from the file
-#         system_prompt = read_prompt_from_file("AI_PROMPT.txt")
-
-#         response = openai.ChatCompletion.create(
-#             model="gpt-4",
-#             messages=[
-#                 {"role": "system", "content": system_prompt},
-#                 {"role": "user", "content": f"Summarize the following YouTube channel description in one sentence: {channel_about}"}
-#             ],
-#             temperature=0.7,
-#             max_tokens=60,
-#             top_p=1.0,
-#             frequency_penalty=0.0,
-#             presence_penalty=0.0,
-#         )
-#         channel_description = response.choices[0].message['content'].strip()
-#         await message.channel.send(channel_description, delete_after=10)  # Send the generated description directly
-#     except Exception as e:
-#         print(f"Error with OpenAI call: {e}")
-#         print("Failed to generate channel description.")
-#         channel_description = None
-
-#     return channel_description

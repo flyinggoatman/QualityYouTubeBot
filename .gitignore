@@ -34,3 +34,6 @@ qualityyoutube.zip
 __pycache__/openai.cpython-310.pyc
 __pycache__/openai1.cpython-310.pyc
 __pycache__/pytube.cpython-310.pyc
+__pycache__
+venv
+youtube_bot.log

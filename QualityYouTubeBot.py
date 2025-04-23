@@ -13,6 +13,25 @@ import urllib.error
 from pytube.exceptions import *
 import time
 import asyncio
+import colorama
+from colorama import Fore, Back, Style
+import logging
+import os
+
+# Get current script directory for log file path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+log_file_path = os.path.join(current_dir, 'youtube_bot.log')
+
+# Set up logging for better error tracking
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    filename=log_file_path
+)
+logger = logging.getLogger('QualityYouTubeBot')
+
+# Initialize colorama for cross-platform colored terminal output
+colorama.init(autoreset=True)
 
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
@@ -29,14 +48,14 @@ if SQL_ENABLED:
     Base = declarative_base()
     
     debug_message = (
-        "Debug Mode Enabled\n"
-        f"Connected to {SQL_HOST}'s database called {SQL_DATABASE} inside the table {SQL_TABLE} as {SQL_USER}"
-        if DEBUG_MODE else "Debug Mode Disabled."
+        f"{Fore.CYAN}Debug Mode Enabled\n"
+        f"{Fore.YELLOW}Connected to {SQL_HOST}'s database called {SQL_DATABASE} inside the table {SQL_TABLE} as {SQL_USER}"
+        if DEBUG_MODE else f"{Fore.CYAN}Debug Mode Disabled."
     )
 else:
     engine = None
     Base = None
-    debug_message = "SQL Disabled"
+    debug_message = f"{Fore.RED}SQL Disabled"
 
 print(debug_message)
 
@@ -46,9 +65,55 @@ prefix = PREFIX
 discord_channel = DISCORD_CHANNEL
 YouTubeDomain = "https://www.youtube.com/channel/"
 
+# ASCII banner for bot startup
+def display_banner():
+    banner = """
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@**@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%&@@@(@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%@@**@@%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*@&#@@@@@@@@@@@@@#%&@@@@@%,***%@@@@@@%#@@@@@@@@@@@@@@&@@%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@(@#&@(@@@@@@@@@@@@&%@%,*,***********%@&&@@@@@@@@@@@@@#@%%@(@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@*&@/,*%@*@@@@@@@@@@@@@@/@@(********(@@/@@@@@@@@@@@@@@@#@(,*#@%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@,@@@&%#(*,,****/(%&&@@@@@@@@@@@*@#********#@/@@@@@@@@@@@@&&#(*,,****/(%&&@@@(@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@(&@#************&@(@@@@@@@@@@&@**%@@@@%/*@&@@@@@@@@@@#&@%************%@&@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@*@#********@@*@@@@@@@@@@@*@@@/@@@@@@&@@@/@@@@@@@@@@@@(@&********&@#@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@#@*********#@(@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%@/********/@%@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@%@&%@@%%#&@@(@%#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@&@&#@@&##&@@#@@(@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@%&/@@@@@@@@@@#%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#&/@@@@@@@@@@/&(@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@&@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@#@@/@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@&&@@,@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@*#@/@@@@@@@@@@@@@@@@/&@@@@@@@@@@@@@@&&&&&&&&&&&&&&&&&@@@@@@@@@@@@@#@@@@@@@@@@@@@@@@&@@*#@#@@@@@@@@@@@@@@@
+@@@@@@@&&@#/#%@@,,*(@&#(*@&&@@@@@@@(@@%%%%%####%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%&@@%@@@@@@@&(*(#&@@%,**/@@&%#(&@@@@@@@
+@@@@@@%&@&**,,,,,********/@@#@@@@@%&@%%%((#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%&&@@%@@@@@@#@&**,,,,*********(@@/@@@@@
+@@@@@@@@@/@@/**********%@&#@@@@@@@%@&%#(#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%&&&@%@@@@@@@@(@@(**********@@#@@@@@@@@
+@@@@@@@@@@@/@(********@@,@@@@@@@@@%@&%((%%%%%%%%%%%%%%%@@@@&%%%%%%%%%%%%%%%%%%%%%%&&&@*@@@@@@@@@@(@/********&@&@@@@@@@@@
+@@@@@@@@@@@%@***(@&/**(@#@@@@@@@@@(@&%%%%%%%%%%%%%%%%%%@&  *&@@&%%%%%%%%%%%%%%%%%%&&&@(@@@@@@@@@@@@,*/%@@(,*(@(@@@@@@@@@
+@@@@@@@@@@(@@@@#@@@%&@@@@@@@@@@@@@&@&%%%%%%%%%%%%%%%%%%@&      ,&@@&%%%%%%%%%%%%%%&&&@#@@@@@@@@@*@@@&%@@@@%@@@&&@@@@@@@@
+@@@@@@@@@@@.@@@@@@@@@@@@/@@@@@@@@@*@&%%%%%%%%%%%%%%%%%%@&       .%@@&%%%%%%%%%%%%%&&&@%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@%@&%%%%%%%%%%%%%%%%%%@&   .%@@&%%%%%%%%%%%%%%%%%&&&@%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#@&%%%%%%%%%%%%%%%%%%@@&@@&%%%%%%%%%%%%%%%%%%%%%&&&@%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@(@&%%%%%%%%%%%%%%%%%%&&%%%%%%%%%%%%%%%%%%%%%%%%%&&&@#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@(@@%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%&&&&@%@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@(@&%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%&&&&%@&@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@*&@@&&&&&&&&&&&&&%%%&&&&&%&&&&&&&&&&&&&&&&&&&@@@#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#(##%%%%%&&/#(######@###(/(((/%%%###(#((@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"""
+    
+    print(f"{Fore.RED}{banner}")
+
 @bot.event
 async def on_ready():
-    bot.run
     discord_channel_int = int(discord_channel)
     discord_channel_name = bot.get_channel(discord_channel_int)
     global allowed_channels
@@ -60,28 +125,34 @@ async def on_ready():
     except FileNotFoundError:
         allowed_channels = []
 
-    # Styled messages with emojis
-    welcome = " ★ QualityYouTubeBot ★ "
+    # Display the ASCII banner first
+    display_banner()
+
+    # Styled messages with emojis and colors
+    divider = f"{Fore.WHITE}{'=' * 80}"
+    welcome = f"{Fore.YELLOW} ★ {Fore.WHITE}QualityYouTubeBot{Fore.YELLOW} ★ "
     debug_message = (
-        " 🌐 DEBUG MODE OFF - Configure your .env to enable additional features 🌐 "
-        if not DEBUG_MODE else " ⚙️ DEBUG MODE ACTIVATED - System diagnostics enabled ⚙️ "
+        f"{Fore.CYAN} 🌐 DEBUG MODE OFF - Configure your .env to enable additional features 🌐 "
+        if not DEBUG_MODE else f"{Fore.GREEN} ⚙️ DEBUG MODE ACTIVATED - System diagnostics enabled ⚙️ "
     )
-    bot_on = f" 🌟 Successfully Connected as {bot.user} 🌟 "
-    discord_info = f"🎉 Connected to Channel: {discord_channel_name} 🎉"
+    bot_on = f"{Fore.YELLOW} 🌟 {Fore.WHITE}Successfully Connected as {Fore.YELLOW}{bot.user} {Fore.WHITE}🌟 "
+    discord_info = f"{Fore.YELLOW}🎉 {Fore.WHITE}Connected to Channel: {Fore.YELLOW}{discord_channel_name} {Fore.WHITE}🎉"
 
     # Print styled boot-up messages
-    print("=" * 80)
+    print(divider)
     print(f"{welcome:^80}")
-    print("=" * 80)
+    print(divider)
     print(f"{debug_message:^80}")
-    print("=" * 80)
+    print(divider)
     print(f"{bot_on:^80}")
-    print("=" * 80)
+    print(divider)
     
     if DEBUG_MODE:
         print(f"{discord_info:^80}")
-        print("🔒 The bot is ready for action. Currently limited to a single server.\nFuture updates may support multiple server connections.")
+        print(f"{Fore.CYAN}🔒 The bot is ready for action. Currently limited to a single server.\nFuture updates may support multiple server connections.")
     print()
+
+    logger.info("Bot started successfully")
 
 
 @bot.event
@@ -98,10 +169,10 @@ async def on_message(message):
     channel_url = message.content.strip()
 
     delete_me_1 = None
-    timeOutMessage10 = " This message will be deleted in 10 seconds."
-    timeOutWhenDone = " This message will be deleted when the process is done."
-    timeStanpIncluded = "Please remove the time stamp from the URL.\nhttps://youtu.be/VIDEO_ID?t=100 *> https://youtu.be/VIDEO_ID\n Basically remove the ***?t=100***\n"
-    youTubeViwers = 'You may also find success in repasting the channel inside chat, sometimes the bot bugs out and posts a channel called "YouTube Viwers" without reason'
+    timeOutMessage10 = f"This message will be deleted in 10 seconds."
+    timeOutWhenDone = f"This message will be deleted when the process is done."
+    timeStanpIncluded = f"Please remove the time stamp from the URL.\nhttps://youtu.be/VIDEO_ID?t=100 *> https://youtu.be/VIDEO_ID\n Basically remove the ***?t=100***\n"
+    youTubeViwers = f'You may also find success in repasting the channel inside chat, sometimes the bot bugs out and posts a channel called "YouTube Viwers" without reason'
     something_went_wrong = f"Something went wrong. We could not add \"{channel_url}\". Please try again, or use a different link to the same channel."
     num10 = 10
 
@@ -123,10 +194,10 @@ async def on_message(message):
             for msg in messages_to_delete:
                 try:
                     await msg.delete()
-                    print(f"Deleted message with channel ID: {channel_id}")
+                    print(f"{Fore.GREEN}Deleted message with channel ID: {channel_id}")
                     await asyncio.sleep(1)  # Add a delay to avoid hitting rate limits
                 except discord.errors.NotFound:
-                    print(f"Message with channel ID: {channel_id} not found for deletion.")
+                    print(f"{Fore.RED}Message with channel ID: {channel_id} not found for deletion.")
             
             last_message_id = messages_to_delete[-1].id if messages_to_delete else None
             if last_message_id is None:
@@ -135,13 +206,22 @@ async def on_message(message):
     try:
         if channel_url.startswith("!delete "):
             channel_url_to_delete = channel_url.split("!delete ")[1].strip()
-            channel_name, channel_id_link, channel_id = (
-                channel_pull(channel_url_to_delete, DEBUG_MODE) 
-                if re.search("/channel/|@|/user/|/c/|(?<!youtu.)com/watch", channel_url_to_delete) 
-                else video_pull(channel_url_to_delete, DEBUG_MODE)
-            )
+            try:
+                channel_name, channel_id_link, channel_id = (
+                    channel_pull(channel_url_to_delete, DEBUG_MODE) 
+                    if re.search("/channel/|@|/user/|/c/|(?<!youtu.)com/watch", channel_url_to_delete) 
+                    else video_pull(channel_url_to_delete, DEBUG_MODE)
+                )
+            except Exception as e:
+                logger.error(f"Error processing delete command: {e}")
+                await message.channel.send(f"Error processing delete command. Please check the URL format and try again.", delete_after=num10)
+                try:
+                    await message.delete()
+                except discord.errors.NotFound:
+                    pass
+                return
             
-            print(f"Extracted channel ID for deletion: {channel_id}")
+            print(f"{Fore.YELLOW}Extracted channel ID for deletion: {Fore.WHITE}{channel_id}")
 
             if await delete_channel(channel_id):
                 await message.channel.send(f"Successfully deleted the channel with ID: {channel_id}", delete_after=num10)
@@ -156,18 +236,31 @@ async def on_message(message):
         elif is_youtube_link(channel_url):
             if processing_message == True:
                 try:
-                    delete_me_1 = await message.channel.send(f"Please stand by {author.mention}.{timeOutWhenDone}", delete_after=num10)
+                    delete_me_1 = await message.channel.send(f"Please stand by {author.mention}. {timeOutWhenDone}", delete_after=num10)
                 except discord.errors.NotFound:
                     pass
             try:
                 await message.delete()
             except discord.errors.NotFound:
                 pass
-            channel_name, channel_id_link, channel_id = (
-                channel_pull(channel_url, DEBUG_MODE) 
-                if re.search("/channel/|@|/user/|/c/|(?<!youtu.)com/watch", channel_url) 
-                else video_pull(channel_url, DEBUG_MODE)
-            )
+                
+            try:
+                channel_name, channel_id_link, channel_id = (
+                    channel_pull(channel_url, DEBUG_MODE) 
+                    if re.search("/channel/|@|/user/|/c/|(?<!youtu.)com/watch", channel_url) 
+                    else video_pull(channel_url, DEBUG_MODE)
+                )
+                
+                logger.info(f"Successfully extracted: Channel: {channel_name}, ID: {channel_id}")
+            except Exception as e:
+                logger.error(f"Error extracting channel info: {e}")
+                await message.channel.send(f"Error processing YouTube link. {something_went_wrong}", delete_after=num10)
+                if delete_me_1:
+                    try:
+                        await delete_me_1.delete()
+                    except discord.errors.NotFound:
+                        pass
+                return
 
             if re.search("UCMDQxm7cUx3yXkfeHa5zJIQ", channel_id_link):
                 await message.channel.send(f"{timeStanpIncluded}{timeOutMessage10}\n\n\n{youTubeViwers}", delete_after=num10)
@@ -177,13 +270,13 @@ async def on_message(message):
                 else:
                     await insert_channel(channel_id, channel_name, channel_id_link)
                     await message.channel.send(f"{channel_name}\r{channel_id_link}\rPosted by {author.display_name}")
-                    print(f"{channel_name}\r{channel_id_link}\rPosted by {author.name}\r")
+                    print(f"{channel_name}\r{channel_id_link}\rPosted by {author.display_name}")
                     if delete_me_1:
                         try:
                             await delete_me_1.delete()
                         except discord.errors.NotFound:
                             pass
-                print(f"{channel_name}\r{channel_id_link}")
+                print(f"{Fore.YELLOW}{channel_name}\r{Fore.WHITE}{channel_id_link}")
 
         elif re.search("!channels", channel_url):
             try:
@@ -193,35 +286,118 @@ async def on_message(message):
             count = 0
             async for _ in message.channel.history(limit=None):
                 count += 1
-            print(f"{count} messages in this channel")
+            print(f"{Fore.CYAN}{count} messages in this channel")
             if delete_me_1:
                 try:
                     await delete_me_1.delete()
                 except discord.errors.NotFound:
                     pass
-            await message.channel.send(f"{count} messages in this channel.", delete_after=num10)
+            await message.channel.send(f"{Fore.YELLOW}{count} messages in this channel.", delete_after=num10)
         
         elif re.search("Delete and post all links", channel_url):
-            print(f"Delete support coming soon!")
+            print(f"{Fore.YELLOW}Delete support coming soon!")
         
         else:
-            print(f"Link not supported or wrong channel. Link was posted inside channel {message.channel.name}")
+            print(f"{Fore.RED}Link not supported or wrong channel. Link was posted inside channel {message.channel.name}")
 
+    
+   except AttributeError as e:
+        print(f"{Fore.RED}There has been an AttributeError at {current_time}.")
+        print(f"{Fore.RED}Error details: {e}")
+        print(f"{Fore.RED}Problem URL: {channel_url}")
+        print(f"{Fore.RED}This typically happens when YouTube returns unexpected data structure.")
+        logger.error(f"AttributeError: {e}, URL: {channel_url}")
+        await message.channel.send(f"There has been an error processing your request. The link format might be invalid or YouTube has changed something. Please try again with a different link format.", delete_after=num10)
+    
     except urllib.error.HTTPError as e:
-        print(e)
-        await message.channel.send(f"The URL {channel_url} returned a 404 Not Found error.", delete_after=num10)
-        await message.channel.send(f"Please note video links are currently broken. Please use a channel link instead.", delete_after=num10)
+        print(f"{Fore.RED}HTTP Error occurred at {current_time}: {e.code} {e.reason}")
+        print(f"{Fore.RED}Problem URL: {channel_url}")
+        logger.error(f"HTTP Error {e.code}: {e.reason}, URL: {channel_url}")
+        
+        if e.code == 400:
+            await message.channel.send(f"YouTube rejected our request (400 Bad Request). This typically happens when YouTube has changed their API. Please try a different link format.", delete_after=num10)
+        elif e.code == 404:
+            await message.channel.send(f"The YouTube content could not be found (404). The video or channel might have been deleted or made private.", delete_after=num10)
+        elif e.code == 429:
+            await message.channel.send(f"We've been rate limited by YouTube (429). Please try again in a few minutes.", delete_after=num10)
+        elif e.code >= 500:
+            await message.channel.send(f"YouTube is experiencing issues (Server Error {e.code}). Please try again later.", delete_after=num10)
+        else:
+            await message.channel.send(f"HTTP Error ({e.code}) when accessing YouTube. Please try again later.", delete_after=num10)
     
-    except AttributeError as e:
-        print(f"There has been an error at {current_time}.")
-        print(f"{channel_url}")
-        await message.channel.send("There has been an error. Please try the same link again.", delete_after=num10)
+    except urllib.error.URLError as e:
+        print(f"{Fore.RED}URL Error occurred at {current_time}: {e.reason}")
+        print(f"{Fore.RED}Problem URL: {channel_url}")
+        logger.error(f"URL Error: {e.reason}, URL: {channel_url}")
+        await message.channel.send(f"Network error when connecting to YouTube. Please check your internet connection and try again.", delete_after=num10)
     
-    except (RegexMatchError, VideoUnavailable, PytubeError) as e:
-        print(f"Something went wrong with processing the link {channel_url} at {current_time}.")
-        await message.channel.send(something_went_wrong, delete_after=num10)
+    except pytube.exceptions.RegexMatchError as e:
+        print(f"{Fore.RED}YouTube RegexMatchError at {current_time}: {e}")
+        print(f"{Fore.RED}Problem URL: {channel_url}")
+        logger.error(f"RegexMatchError: {e}, URL: {channel_url}")
+        await message.channel.send(f"Could not parse the YouTube link. This usually means the URL format is not recognized. Please try with a standard YouTube URL.", delete_after=num10)
     
-    else:
-        print("there has been an error.")
-
+    except pytube.exceptions.ExtractError as e:
+        print(f"{Fore.RED}YouTube ExtractError at {current_time}: {e}")
+        print(f"{Fore.RED}Problem URL: {channel_url}")
+        logger.error(f"ExtractError: {e}, URL: {channel_url}")
+        await message.channel.send(f"Could not extract information from the YouTube link. YouTube might have changed something. Please try a different format of the same link.", delete_after=num10)
+    
+    except pytube.exceptions.VideoUnavailable as e:
+        print(f"{Fore.RED}YouTube VideoUnavailable at {current_time}: {e}")
+        print(f"{Fore.RED}Problem URL: {channel_url}")
+        logger.error(f"VideoUnavailable: {e}, URL: {channel_url}")
+        await message.channel.send(f"This video is unavailable. It might be private, age-restricted, or deleted.", delete_after=num10)
+    
+    except json.JSONDecodeError as e:
+        print(f"{Fore.RED}JSON Decode Error at {current_time}: {e}")
+        print(f"{Fore.RED}Problem URL: {channel_url}")
+        logger.error(f"JSONDecodeError: {e}, URL: {channel_url}")
+        await message.channel.send(f"Failed to process YouTube's response. This might be a temporary issue. Please try again later.", delete_after=num10)
+    
+    except requests.exceptions.RequestException as e:
+        print(f"{Fore.RED}Request Exception at {current_time}: {e}")
+        print(f"{Fore.RED}Problem URL: {channel_url}")
+        logger.error(f"RequestException: {e}, URL: {channel_url}")
+        await message.channel.send(f"Network error when making a request to YouTube. Please check your connection and try again.", delete_after=num10)
+    
+    except asyncio.TimeoutError:
+        print(f"{Fore.RED}Async Timeout at {current_time}")
+        print(f"{Fore.RED}Problem URL: {channel_url}")
+        logger.error(f"TimeoutError, URL: {channel_url}")
+        await message.channel.send(f"The operation timed out. YouTube might be slow or unresponsive. Please try again later.", delete_after=num10)
+    
+    except discord.errors.Forbidden as e:
+        print(f"{Fore.RED}Discord Permission Error at {current_time}: {e}")
+        logger.error(f"Discord Forbidden Error: {e}")
+        # Don't try to send a message as we likely don't have permission
+        print(f"{Fore.RED}Bot doesn't have permission to send messages in this channel.")
+    
+    except KeyError as e:
+        print(f"{Fore.RED}KeyError at {current_time}: {e}")
+        print(f"{Fore.RED}Problem URL: {channel_url}")
+        print(f"{Fore.RED}This typically happens when expected data is missing from YouTube's response.")
+        logger.error(f"KeyError: {e}, URL: {channel_url}")
+        await message.channel.send(f"Failed to find expected information in YouTube's response. YouTube may have changed their data format. Please try a different link.", delete_after=num10)
+    
+    except Exception as e:
+        print(f"{Fore.RED}Unexpected error at {current_time}: {e}")
+        print(f"{Fore.RED}Error type: {type(e).__name__}")
+        print(f"{Fore.RED}URL: {channel_url}")
+        print(f"{Fore.RED}Full error details:", exc_info=True)
+        logger.error(f"Unexpected error: {e}", exc_info=True)
+        
+        # Give more detailed feedback about the general error
+        error_msg = f"An unexpected error occurred: {type(e).__name__}. "
+        error_msg += "This has been logged for investigation. "
+        error_msg += "Please try again later or use a different link format."
+        
+        await message.channel.send(error_msg, delete_after=num10)
+        
+        if delete_me_1:
+            try:
+                await delete_me_1.delete()
+            except discord.errors.NotFound:
+                pass
+# Start the bot
 bot.run(token)
